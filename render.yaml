@@ -1,0 +1,13 @@
+services:
+  - type: static_site
+    name: material-weight-calculator
+    env: static
+    buildCommand: echo "No build command needed for static site"
+    staticPublishPath: .
+    pullRequestPreviewsEnabled: true
+    headers:
+      - path: /*
+        name: Cache-Control
+        value: public, max-age=0, must-revalidate
+
+
