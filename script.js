@@ -75,23 +75,25 @@ class MaterialCalculatorApp {
 
     renderHomeView() {
         const tiles = [
-            { id: 'mezikruzi', title: 'Mezikruží', icon: '⭕' },
-            { id: 'trubka', title: 'Trubka', icon: '🔧' },
-            { id: 'hranol', title: 'Hranol', icon: '📦' },
-            { id: 'valec', title: 'Válec', icon: '🔴' },
-            { id: 'jakl', title: 'Jakl', icon: '⬜' },
-            { id: 'profil-l', title: 'Profil L', icon: '📐' },
-            { id: 'plochace', title: 'Plocháče', icon: '📏' },
-            { id: 'profil-iu', title: 'Profil I+U', icon: '🏗️' },
-            { id: 'kabely', title: 'Kabely', icon: '🔌' },
-            { id: 'folie', title: 'Fólie', icon: '📜' }
+            { id: 'mezikruzi', title: 'Mezikruží', image: 'images/mezikruzi.png' },
+            { id: 'trubka', title: 'Trubka', image: 'images/trubka.png' },
+            { id: 'hranol', title: 'Hranol', image: 'images/hranol.png' },
+            { id: 'valec', title: 'Válec', image: 'images/valec.png' },
+            { id: 'jakl', title: 'Jakl', image: 'images/jakl.png' },
+            { id: 'profil-l', title: 'Profil L', image: 'images/profil-l.png' },
+            { id: 'plochace', title: 'Plocháče', image: 'images/plochace.png' },
+            { id: 'profil-iu', title: 'Profil I+U', image: 'images/profil-iu.png' },
+            { id: 'kabely', title: 'Kabely', image: 'images/kabely.png' },
+            { id: 'folie', title: 'Fólie', image: 'images/folie.png' }
         ];
 
         const tilesHTML = tiles.map(tile => `
-            <div class="tile" onclick="app.loadView('${tile.id}')" 
-                 onkeydown="if(event.key==='Enter'||event.key===' ') app.loadView('${tile.id}')"
-                 tabindex="0" role="button" aria-label="Otevřít kalkulačku ${tile.title}">
-                <div class="tile-icon" aria-hidden="true">${tile.icon}</div>
+            <div class="tile" onclick="app.loadView('${tile.id}')" role="button" tabindex="0" 
+                 onkeydown="if(event.key==='Enter'||event.key===' '){app.loadView('${tile.id}')}"
+                 aria-label="Otevřít kalkulačku ${tile.title}">
+                <div class="tile-image">
+                    <img src="${tile.image}" alt="${tile.title}" />
+                </div>
                 <div class="tile-title">${tile.title}</div>
             </div>
         `).join('');
@@ -106,38 +108,42 @@ class MaterialCalculatorApp {
     }
 
     renderCalculatorView(type) {
-        const calculatorConfig = this.getCalculatorConfig(type);
+        const config = this.getCalculatorConfig(type);
         
         this.container.innerHTML = `
             <div class="calculator-view">
                 <div class="calculator-header">
                     <button class="back-btn" onclick="app.loadView('home')" aria-label="Zpět na hlavní stránku">← Zpět</button>
-                    <h2>${calculatorConfig.title}</h2>
-                    <button class="reset-btn" onclick="app.resetCalculator()" aria-label="Vymazat všechny hodnoty">Reset hodnot</button>
+                    <h2>${config.title}</h2>
+                    <button class="reset-btn" onclick="app.resetCalculator()" aria-label="Resetovat hodnoty">Reset hodnot</button>
                 </div>
                 
                 ${this.renderMaterialSelector(type)}
                 
-                <div class="calculator-form" role="form" aria-label="Vstupní hodnoty pro výpočet">
-                    ${calculatorConfig.inputs.map(input => this.renderInput(input)).join('')}
+                <div class="inputs-container">
+                    ${config.inputs.map(input => this.renderInput(input)).join('')}
                 </div>
                 
-                <div class="calculator-results" role="region" aria-label="Výsledky výpočtu">
-                    <div class="result-item">
-                        <label>Hmotnost:</label>
-                        <span id="result-weight" aria-live="polite">0.00 kg</span>
-                    </div>
+                <div class="result-container">
+                    <div class="result-label">Hmotnost:</div>
+                    <div class="result-value" id="result-weight">0.00 kg</div>
                 </div>
                 
-                <div class="calculator-actions" role="group" aria-label="Akce s výsledky">
-                    <button onclick="app.takeScreenshot()" aria-label="Vytvořit snímek obrazovky">📷 Snímek obrazovky</button>
-                    <button onclick="app.exportToEmail()" aria-label="Exportovat výsledky do e-mailu">📧 Uložit do e-mailu</button>
+                <div class="action-buttons">
+                    <button class="screenshot-btn" onclick="app.takeScreenshot()" aria-label="Pořídit snímek obrazovky">📷 Snímek obrazovky</button>
+                    <button class="export-btn" onclick="app.exportToEmail()" aria-label="Uložit výsledky do e-mailu">📧 Uložit do e-mailu</button>
                 </div>
             </div>
         `;
         
-        // Add event listeners for real-time calculation
-        this.setupCalculatorListeners(type);
+        // Show initial material density if material selector exists
+        const materialSelect = document.getElementById('material-select');
+        if (materialSelect) {
+            this.showMaterialDensity('material-select', materialSelect.value);
+        }
+        
+        // Initial calculation
+        this.calculate();
     }
 
     getCalculatorConfig(type) {
@@ -241,11 +247,20 @@ class MaterialCalculatorApp {
         return `
             <div class="material-selector">
                 <label for="material-select">Materiál:</label>
-                <select id="material-select" onchange="app.calculate()">
+                <select id="material-select" onchange="app.showMaterialDensity('material-select', this.value); app.calculate()">
                     ${materialOptions}
                 </select>
+                <div id="material-density" class="material-density"></div>
             </div>
         `;
+    }
+
+    showMaterialDensity(selectId, materialValue) {
+        const densityDiv = document.getElementById('material-density');
+        if (densityDiv && materialValue && MATERIAL_DENSITIES[materialValue]) {
+            const density = MATERIAL_DENSITIES[materialValue];
+            densityDiv.innerHTML = `<span class="density-label">Hustota:</span> <span class="density-value">${density} kg/m³</span>`;
+        }
     }
 
     renderInput(input) {
