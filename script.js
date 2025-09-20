@@ -362,7 +362,8 @@ class MaterialCalculatorApp {
 
     setupRouter() {
         window.addEventListener('popstate', (event) => {
-            const view = event.state?.view || 'home';
+            const state = event.state;
+            const view = state && state.view ? state.view : 'home';
             this.loadView(view, false);
         });
     }
@@ -541,18 +542,31 @@ class MaterialCalculatorApp {
         const exportButton = this.container.querySelector('.export-btn');
         const form = this.container.querySelector('.calculator-form');
 
-        backButton?.addEventListener('click', () => this.loadView('home'));
-        resetButton?.addEventListener('click', this.resetCalculator);
-        screenshotButton?.addEventListener('click', this.takeScreenshot);
-        exportButton?.addEventListener('click', this.exportToEmail);
+        if (backButton) {
+            backButton.addEventListener('click', () => this.loadView('home'));
+        }
 
-        form?.querySelectorAll('input').forEach((input) => {
-            input.addEventListener('input', this.calculate);
-        });
+        if (resetButton) {
+            resetButton.addEventListener('click', this.resetCalculator);
+        }
 
-        form?.querySelectorAll('select').forEach((select) => {
-            select.addEventListener('change', this.calculate);
-        });
+        if (screenshotButton) {
+            screenshotButton.addEventListener('click', this.takeScreenshot);
+        }
+
+        if (exportButton) {
+            exportButton.addEventListener('click', this.exportToEmail);
+        }
+
+        if (form) {
+            form.querySelectorAll('input').forEach((input) => {
+                input.addEventListener('input', this.calculate);
+            });
+
+            form.querySelectorAll('select').forEach((select) => {
+                select.addEventListener('change', this.calculate);
+            });
+        }
 
         if (config.showMaterialSelector !== false) {
             const materialSelect = this.container.querySelector('#material-select');
@@ -590,7 +604,7 @@ class MaterialCalculatorApp {
 
     getSelectedMaterial() {
         const select = document.getElementById('material-select');
-        const value = select?.value || DEFAULT_MATERIAL;
+        const value = select && select.value ? select.value : DEFAULT_MATERIAL;
         return MATERIAL_DENSITIES[value] ? value : DEFAULT_MATERIAL;
     }
 
@@ -707,21 +721,24 @@ class MaterialCalculatorApp {
             ctx.font = '24px Segoe UI';
             ctx.fillText('Kalkulátor hmotnosti materiálů', 24, 48);
 
-            const title = calculatorView.querySelector('h2')?.textContent || '';
+            const titleElement = calculatorView.querySelector('h2');
+            const title = titleElement && titleElement.textContent ? titleElement.textContent : '';
             ctx.font = '20px Segoe UI';
             ctx.fillText(title, 24, 90);
 
             let y = 130;
             calculatorView.querySelectorAll('.input-group').forEach((group) => {
-                const label = group.querySelector('label')?.textContent ?? '';
+                const labelElement = group.querySelector('label');
+                const label = labelElement && labelElement.textContent ? labelElement.textContent : '';
                 const input = group.querySelector('input, select');
-                const value = input?.value ?? '';
+                const value = input && typeof input.value !== 'undefined' ? input.value : '';
                 ctx.font = '16px Segoe UI';
                 ctx.fillText(`${label}: ${value}`, 24, y);
                 y += 30;
             });
 
-            const result = calculatorView.querySelector('#result-weight')?.textContent ?? '';
+            const resultElement = calculatorView.querySelector('#result-weight');
+            const result = resultElement && resultElement.textContent ? resultElement.textContent : '';
             ctx.font = '18px Segoe UI';
             ctx.fillStyle = '#5f8f11';
             ctx.fillText(`Výsledek: ${result}`, 24, y + 20);
@@ -753,22 +770,28 @@ class MaterialCalculatorApp {
                 return;
             }
 
+            const resultElement = document.getElementById('result-weight');
+            const resultText = resultElement && resultElement.textContent ? resultElement.textContent : '';
+
             const calculatorData = {
                 type: this.currentView,
                 title: config.title,
                 timestamp: new Date().toISOString(),
                 inputs: {},
-                result: document.getElementById('result-weight')?.textContent ?? ''
+                result: resultText
             };
 
             const form = this.container.querySelector('.calculator-form');
-            form?.querySelectorAll('input, select').forEach((field) => {
-                const label = field.previousElementSibling?.textContent || field.id;
-                calculatorData.inputs[field.id] = {
-                    label,
-                    value: field.value
-                };
-            });
+            if (form) {
+                form.querySelectorAll('input, select').forEach((field) => {
+                    const labelElement = field.previousElementSibling;
+                    const label = labelElement && labelElement.textContent ? labelElement.textContent : field.id;
+                    calculatorData.inputs[field.id] = {
+                        label,
+                        value: field.value
+                    };
+                });
+            }
 
             const materialSelect = document.getElementById('material-select');
             if (materialSelect) {
@@ -808,3 +831,6 @@ S pozdravem`);
     }
 }
 
+document.addEventListener('DOMContentLoaded', () => {
+    window.app = new MaterialCalculatorApp();
+});
