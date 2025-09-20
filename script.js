@@ -130,6 +130,7 @@ class MaterialCalculatorApp {
                 </div>
                 
                 <div class="action-buttons">
+                    <button class="calculate-btn" onclick="app.calculate()" aria-label="Vypočítat hmotnost">Vypočítej</button>
                     <button class="screenshot-btn" onclick="app.takeScreenshot()" aria-label="Pořídit snímek obrazovky">📷 Snímek obrazovky</button>
                     <button class="export-btn" onclick="app.exportToEmail()" aria-label="Uložit výsledky do e-mailu">📧 Uložit do e-mailu</button>
                 </div>

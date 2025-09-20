@@ -218,7 +218,14 @@ main {
     color: white;
 }
 
-.back-btn:hover, .reset-btn:hover {
+.back-btn:hover {
+    background-color: rgb(109, 110, 114);
+    color: white;
+}
+
+.reset-btn:hover {
+    background-color: rgb(166, 206, 57);
+    color: white;
     opacity: 0.8;
 }
 
@@ -341,6 +348,16 @@ main {
 }
 
 .calculator-actions button:hover {
+    opacity: 0.8;
+}
+
+.screenshot-btn, .export-btn, .calculate-btn {
+    background-color: rgb(166, 206, 57);
+    color: white;
+    border: 2px solid rgb(166, 206, 57);
+}
+
+.screenshot-btn:hover, .export-btn:hover, .calculate-btn:hover {
     opacity: 0.8;
 }
 
