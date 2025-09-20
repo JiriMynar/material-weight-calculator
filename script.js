@@ -456,7 +456,7 @@ class MaterialCalculatorApp {
                 <div class="calculator-header">
                     <button type="button" class="btn btn-secondary back-btn">← Zpět</button>
                     <h2>${config.title}</h2>
-                    <button type="button" class="btn btn-primary reset-btn">Resetovat</button>
+                    <button type="button" class="btn btn-danger reset-btn">Resetovat</button>
                 </div>
                 ${materialSelectorHTML}
                 <form class="calculator-form" novalidate>
@@ -469,6 +469,10 @@ class MaterialCalculatorApp {
                     </div>
                 </div>
                 <div class="calculator-actions">
+                    <button type="button" class="btn btn-primary calculate-btn">
+                        <span class="btn-icon" aria-hidden="true">🧮</span>
+                        <span>Vypočítej</span>
+                    </button>
                     <button type="button" class="btn btn-primary screenshot-btn">
                         <span class="btn-icon" aria-hidden="true">📷</span>
                         <span>Snímek obrazovky</span>
@@ -482,7 +486,6 @@ class MaterialCalculatorApp {
         `;
 
         this.attachCalculatorEvents(config);
-        this.calculate();
     }
 
     renderMaterialSelector() {
@@ -537,6 +540,7 @@ class MaterialCalculatorApp {
 
     attachCalculatorEvents(config) {
         const backButton = this.container.querySelector('.back-btn');
+        const calculateButton = this.container.querySelector('.calculate-btn');
         const resetButton = this.container.querySelector('.reset-btn');
         const screenshotButton = this.container.querySelector('.screenshot-btn');
         const exportButton = this.container.querySelector('.export-btn');
@@ -544,6 +548,10 @@ class MaterialCalculatorApp {
 
         if (backButton) {
             backButton.addEventListener('click', () => this.loadView('home'));
+        }
+
+        if (calculateButton) {
+            calculateButton.addEventListener('click', this.calculate);
         }
 
         if (resetButton) {
@@ -559,12 +567,9 @@ class MaterialCalculatorApp {
         }
 
         if (form) {
-            form.querySelectorAll('input').forEach((input) => {
-                input.addEventListener('input', this.calculate);
-            });
-
-            form.querySelectorAll('select').forEach((select) => {
-                select.addEventListener('change', this.calculate);
+            form.addEventListener('submit', (event) => {
+                event.preventDefault();
+                this.calculate();
             });
         }
 
@@ -574,7 +579,6 @@ class MaterialCalculatorApp {
                 materialSelect.addEventListener('change', (event) => {
                     const value = event.target.value || DEFAULT_MATERIAL;
                     this.updateMaterialDensity(value, false);
-                    this.calculate();
                 });
                 this.updateMaterialDensity(materialSelect.value || DEFAULT_MATERIAL, false);
             }
@@ -608,7 +612,7 @@ class MaterialCalculatorApp {
         return MATERIAL_DENSITIES[value] ? value : DEFAULT_MATERIAL;
     }
 
-    updateMaterialDensity(materialKey, shouldRecalculate = true) {
+    updateMaterialDensity(materialKey, shouldRecalculate = false) {
         const densityElement = document.getElementById('material-density');
         const safeKey = MATERIAL_DENSITIES[materialKey] ? materialKey : DEFAULT_MATERIAL;
         const density = MATERIAL_DENSITIES[safeKey];
@@ -657,7 +661,8 @@ class MaterialCalculatorApp {
 
     resetCalculator() {
         const form = this.container.querySelector('.calculator-form');
-        if (!form) {
+        const config = CALCULATORS[this.currentView];
+        if (!form || !config) {
             return;
         }
 
@@ -677,9 +682,14 @@ class MaterialCalculatorApp {
         if (materialSelect) {
             materialSelect.value = DEFAULT_MATERIAL;
             this.updateMaterialDensity(DEFAULT_MATERIAL, false);
-            this.calculate();
-        } else {
-            this.calculate();
+        }
+
+        const resultElement = document.getElementById('result-weight');
+        if (resultElement) {
+            const resetValue = typeof config.format === 'function'
+                ? config.format(0)
+                : this.formatNumber(0, config.resultUnit || 'kg');
+            resultElement.textContent = resetValue;
         }
     }
 
