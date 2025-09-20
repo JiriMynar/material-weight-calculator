@@ -210,7 +210,13 @@ const CALCULATORS = {
             const length = app.readNumber('length');
             const density = app.getMaterialDensity();
 
-            if (width <= 0 || height <= 0 || thickness <= 0 || length <= 0) {
+            if (
+                width <= 0 ||
+                height <= 0 ||
+                thickness <= 0 ||
+                length <= 0 ||
+                thickness >= Math.min(width, height)
+            ) {
                 return 0;
             }
 
@@ -312,33 +318,31 @@ const CALCULATORS = {
         inputs: [
             { id: 'roll-diameter', label: 'Průměr role D [mm]', type: 'number' },
             { id: 'spool-diameter', label: 'Průměr špule d [mm]', type: 'number' },
-            { id: 'roll-length', label: 'Délka role l [mm]', type: 'number' },
+            { id: 'roll-width', label: 'Šířka role b [mm]', type: 'number' },
             { id: 'material-thickness', label: 'Síla materiálu [mm]', type: 'number' }
         ],
         compute: (app) => {
             const rollDiameter = app.readNumber('roll-diameter');
             const spoolDiameter = app.readNumber('spool-diameter');
-            const rollLength = app.readNumber('roll-length');
+            const rollWidth = app.readNumber('roll-width');
             const thickness = app.readNumber('material-thickness');
 
             if (
                 rollDiameter <= 0 ||
                 spoolDiameter <= 0 ||
-                rollLength <= 0 ||
+                rollWidth <= 0 ||
                 thickness <= 0 ||
                 spoolDiameter >= rollDiameter
             ) {
                 return 0;
             }
 
-            const area = (
-                (rollDiameter - (rollDiameter - spoolDiameter) / 2) *
-                Math.PI *
-                ((rollDiameter - spoolDiameter) / (2 * thickness)) *
-                rollLength
-            ) / 1_000_000_000;
+            const crossSectionArea = (Math.PI * (rollDiameter ** 2 - spoolDiameter ** 2)) / 4;
+            const stripLengthMm = crossSectionArea / thickness;
+            const stripLengthM = stripLengthMm / 1000;
+            const stripWidthM = rollWidth / 1000;
 
-            return area;
+            return stripLengthM * stripWidthM;
         }
     }
 };
@@ -413,6 +417,9 @@ class MaterialCalculatorApp {
                 <div class="tiles-grid">
                     ${tilesHTML}
                 </div>
+                <figure class="home-illustration">
+                    <img src="images/tes.webp" alt="Ilustrace vstupu do areálu TES" onerror="this.onerror=null;this.src='images/tes-illustration.svg';">
+                </figure>
             </div>
         `;
 
@@ -614,7 +621,8 @@ class MaterialCalculatorApp {
         const density = MATERIAL_DENSITIES[safeKey];
 
         if (densityElement) {
-            densityElement.innerHTML = `<strong>Hustota:</strong> ${density} kg/m³`;
+            const formattedDensity = new Intl.NumberFormat('cs-CZ').format(density);
+            densityElement.innerHTML = `<strong>Hustota:</strong> ${formattedDensity} kg/m³`;
         }
 
         const materialSelect = document.getElementById('material-select');
@@ -707,21 +715,24 @@ class MaterialCalculatorApp {
 
     formatWithPrecision(value, initialPrecision) {
         if (!Number.isFinite(value)) {
-            return '0.000';
+            return '0,000';
         }
 
         const basePrecision = Math.max(0, Number(initialPrecision) || 0);
         const maxPrecision = Math.max(basePrecision, 6);
 
         let decimals = basePrecision;
-        let formatted = value.toFixed(decimals);
+        let formattedNumber = Number(value.toFixed(decimals));
 
-        while (value !== 0 && Number(formatted) === 0 && decimals < maxPrecision) {
+        while (value !== 0 && formattedNumber === 0 && decimals < maxPrecision) {
             decimals += 1;
-            formatted = value.toFixed(decimals);
+            formattedNumber = Number(value.toFixed(decimals));
         }
 
-        return formatted;
+        return new Intl.NumberFormat('cs-CZ', {
+            minimumFractionDigits: decimals,
+            maximumFractionDigits: decimals
+        }).format(formattedNumber);
     }
 
     async loadProfileData() {
