@@ -293,7 +293,6 @@ const CALCULATORS = {
             { id: 'spool-diameter', label: 'Průměr špule D [mm]', type: 'number' },
             { id: 'turns-count', label: 'Počet závitů kabelu', type: 'number' }
         ],
-        format: (value) => `${value.toFixed(3)} m`,
         compute: (app) => {
             const spoolDiameter = app.readNumber('spool-diameter');
             const turns = app.readNumber('turns-count');
@@ -316,7 +315,6 @@ const CALCULATORS = {
             { id: 'roll-length', label: 'Délka role l [mm]', type: 'number' },
             { id: 'material-thickness', label: 'Síla materiálu [mm]', type: 'number' }
         ],
-        format: (value) => `${value.toFixed(3)} m²`,
         compute: (app) => {
             const rollDiameter = app.readNumber('roll-diameter');
             const spoolDiameter = app.readNumber('spool-diameter');
@@ -447,9 +445,7 @@ class MaterialCalculatorApp {
             : '';
 
         const inputsHTML = config.inputs.map((input) => this.renderInput(input)).join('');
-        const initialResult = typeof config.format === 'function'
-            ? config.format(0)
-            : this.formatNumber(0, config.resultUnit || 'kg');
+        const initialResult = this.formatResult(0, config);
 
         this.container.innerHTML = `
             <div class="calculator-view" data-calculator="${type}">
@@ -631,10 +627,6 @@ class MaterialCalculatorApp {
         }
     }
 
-    formatNumber(value, unit) {
-        return `${value.toFixed(3)} ${unit}`;
-    }
-
     async calculate() {
         const config = CALCULATORS[this.currentView];
         const resultElement = document.getElementById('result-weight');
@@ -648,14 +640,10 @@ class MaterialCalculatorApp {
             const numericValue = Number.isFinite(rawValue) ? rawValue : 0;
             const safeValue = Math.max(0, numericValue);
 
-            resultElement.textContent = typeof config.format === 'function'
-                ? config.format(safeValue)
-                : this.formatNumber(safeValue, config.resultUnit || 'kg');
+            resultElement.textContent = this.formatResult(safeValue, config);
         } catch (error) {
             console.error('Chyba při výpočtu:', error);
-            resultElement.textContent = typeof config.format === 'function'
-                ? config.format(0)
-                : this.formatNumber(0, config.resultUnit || 'kg');
+            resultElement.textContent = this.formatResult(0, config);
         }
     }
 
@@ -686,11 +674,54 @@ class MaterialCalculatorApp {
 
         const resultElement = document.getElementById('result-weight');
         if (resultElement) {
-            const resetValue = typeof config.format === 'function'
-                ? config.format(0)
-                : this.formatNumber(0, config.resultUnit || 'kg');
-            resultElement.textContent = resetValue;
+            resultElement.textContent = this.formatResult(0, config);
         }
+    }
+
+    formatResult(value, config) {
+        if (config && typeof config.format === 'function') {
+            try {
+                return config.format(value, this);
+            } catch (error) {
+                console.error('Chyba formátování výsledku:', error);
+            }
+        }
+
+        const unit = config && config.resultUnit ? config.resultUnit : 'kg';
+        return this.formatNumber(value, unit);
+    }
+
+    formatNumber(value, unit) {
+        const absValue = Math.abs(value);
+
+        if (unit === 'kg' && absValue > 0 && absValue < 0.001) {
+            const grams = absValue * 1000;
+            const precision = grams >= 1 ? 3 : 4;
+            const formattedGrams = this.formatWithPrecision(grams, precision);
+            return `${formattedGrams} g`;
+        }
+
+        const formatted = this.formatWithPrecision(absValue, 3);
+        return `${formatted} ${unit}`;
+    }
+
+    formatWithPrecision(value, initialPrecision) {
+        if (!Number.isFinite(value)) {
+            return '0.000';
+        }
+
+        const basePrecision = Math.max(0, Number(initialPrecision) || 0);
+        const maxPrecision = Math.max(basePrecision, 6);
+
+        let decimals = basePrecision;
+        let formatted = value.toFixed(decimals);
+
+        while (value !== 0 && Number(formatted) === 0 && decimals < maxPrecision) {
+            decimals += 1;
+            formatted = value.toFixed(decimals);
+        }
+
+        return formatted;
     }
 
     async loadProfileData() {
