@@ -7,6 +7,9 @@
     --color-accent-dark: #7ea021;
     --color-border: #dbe3c2;
     --color-border-strong: #c5d49c;
+    --color-danger: #e74c3c;
+    --color-danger-dark: #c0392b;
+    --color-danger-border: rgba(231, 76, 60, 0.55);
     --shadow-soft: 0 18px 45px rgba(95, 143, 17, 0.16);
     --shadow-tight: 0 10px 22px rgba(95, 143, 17, 0.18);
     --shadow-card: 0 18px 40px rgba(18, 26, 0, 0.12);
@@ -233,6 +236,14 @@ main {
     --btn-color: #ffffff;
 }
 
+.btn-danger {
+    --btn-bg: var(--color-danger);
+    --btn-bg-hover: var(--color-danger-dark);
+    --btn-border: var(--color-danger-border);
+    --btn-color: #ffffff;
+    box-shadow: 0 20px 42px rgba(192, 57, 43, 0.25);
+}
+
 .btn-icon {
     font-size: 1.15rem;
     line-height: 1;
@@ -362,14 +373,14 @@ main {
 }
 
 .calculator-actions {
-    display: flex;
-    justify-content: center;
-    flex-wrap: wrap;
+    display: grid;
+    grid-template-columns: repeat(auto-fit, minmax(220px, 1fr));
     gap: 1rem;
+    align-items: stretch;
 }
 
 .calculator-actions .btn {
-    min-width: 230px;
+    width: 100%;
 }
 
 @media (max-width: 880px) {
@@ -393,11 +404,7 @@ main {
     }
 
     .calculator-actions {
-        flex-direction: column;
-    }
-
-    .calculator-actions .btn {
-        width: 100%;
+        grid-template-columns: 1fr;
     }
 }
 
