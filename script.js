@@ -402,6 +402,10 @@ class MaterialCalculatorApp {
     }
 
     renderHome() {
+        if (typeof document !== 'undefined' && document.body && document.body.classList) {
+            document.body.classList.add('home-background');
+        }
+
         const tilesHTML = CALCULATOR_TILES.map((tile) => `
             <div class="tile" role="button" tabindex="0" data-target="${tile.id}"
                  aria-label="Otevřít kalkulačku ${tile.title}">
@@ -417,9 +421,6 @@ class MaterialCalculatorApp {
                 <div class="tiles-grid">
                     ${tilesHTML}
                 </div>
-                <figure class="home-illustration">
-                    <img src="images/tes.webp" alt="Ilustrace vstupu do areálu TES" onerror="this.onerror=null;this.src='images/tes-illustration.svg';">
-                </figure>
             </div>
         `;
 
@@ -440,6 +441,10 @@ class MaterialCalculatorApp {
     }
 
     renderCalculator(type) {
+        if (typeof document !== 'undefined' && document.body && document.body.classList) {
+            document.body.classList.remove('home-background');
+        }
+
         const config = CALCULATORS[type];
 
         if (!config) {
