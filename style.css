@@ -1,4 +1,3 @@
- :root {
     --color-background: #ffffff;
     --color-surface: #f7f9f2;
     --color-text: #1c1d21;
@@ -48,8 +47,18 @@ body.home-background::after {
 
 body.home-background::before {
     z-index: -2;
-    background: url('images/tes.webp') center / cover no-repeat;
+    background-image: url('images/tes.webp');
+    background-repeat: no-repeat;
+    background-position: center 45%;
+    background-size: clamp(960px, 85vw, 1600px);
     opacity: 0.82;
+}
+
+@media (max-width: 900px) {
+    body.home-background::before {
+        background-size: cover;
+        background-position: center;
+    }
 }
 
 body.home-background::after {
