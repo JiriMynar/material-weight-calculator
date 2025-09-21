@@ -1,4 +1,4 @@
-:root {
+ :root {
     --color-background: #ffffff;
     --color-surface: #f7f9f2;
     --color-text: #1c1d21;
@@ -31,6 +31,30 @@ body {
     color: var(--color-text);
     line-height: 1.6;
     min-height: 100vh;
+}
+
+body.home-background {
+    position: relative;
+}
+
+body.home-background::before,
+body.home-background::after {
+    content: "";
+    position: fixed;
+    inset: 0;
+    pointer-events: none;
+    transition: opacity 0.4s ease;
+}
+
+body.home-background::before {
+    z-index: -2;
+    background: url('images/tes.webp') center / cover no-repeat;
+    opacity: 0.82;
+}
+
+body.home-background::after {
+    z-index: -1;
+    background: linear-gradient(180deg, rgba(255, 255, 255, 0.92) 0%, rgba(255, 255, 255, 0.72) 42%, rgba(255, 255, 255, 0.78) 100%);
 }
 
 header {
@@ -103,6 +127,9 @@ main {
 
 .home-view {
     text-align: center;
+    position: relative;
+    isolation: isolate;
+    padding-bottom: 2.4rem;
 }
 
 .tiles-grid {
@@ -113,10 +140,10 @@ main {
 }
 
 .tile {
-    background: rgba(255, 255, 255, 0.75);
+    background: rgba(255, 255, 255, 0.82);
     border-radius: var(--radius-large);
     padding: 2.2rem 1.8rem;
-    border: 1px solid rgba(166, 206, 57, 0.2);
+    border: 1px solid rgba(166, 206, 57, 0.28);
     box-shadow: var(--shadow-card);
     cursor: pointer;
     transition: transform 0.28s ease, box-shadow 0.28s ease, border-color 0.28s ease;
@@ -126,28 +153,14 @@ main {
     align-items: center;
     text-align: center;
     min-height: 250px;
-}
-
-.home-illustration {
-    margin-top: 2.5rem;
-    display: flex;
-    justify-content: center;
-    align-items: center;
-}
-
-.home-illustration img {
-    width: min(780px, 100%);
-    border-radius: var(--radius-large);
-    box-shadow: var(--shadow-card);
-    border: 1px solid rgba(28, 29, 33, 0.06);
-    background: rgba(255, 255, 255, 0.85);
+    backdrop-filter: blur(6px);
 }
 
 .tile:hover,
 .tile:focus-visible {
     transform: translateY(-6px) scale(1.01);
-    box-shadow: 0 26px 45px rgba(95, 143, 17, 0.2);
-    border-color: rgba(126, 160, 33, 0.65);
+    box-shadow: 0 26px 45px rgba(95, 143, 17, 0.24);
+    border-color: rgba(126, 160, 33, 0.68);
 }
 
 .tile-image {
