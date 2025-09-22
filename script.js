@@ -888,6 +888,59 @@ S pozdravem`);
     }
 }
 
+function initializeHeaderLogo() {
+    const logo = document.querySelector('.app-logo');
+    if (!logo) {
+        return;
+    }
+
+    const primarySource = (logo.dataset.logoSrc || '').trim();
+    const fallbackSources = (logo.dataset.logoFallbacks || '')
+        .split(',')
+        .map((value) => value.trim())
+        .filter((value, index, array) => value && array.indexOf(value) === index);
+
+    const markLogoLoaded = () => {
+        logo.classList.add('app-logo--loaded');
+    };
+
+    if (logo.complete && logo.naturalWidth > 0) {
+        markLogoLoaded();
+    } else {
+        logo.addEventListener('load', markLogoLoaded, { once: true });
+    }
+
+    let fallbackIndex = 0;
+
+    if (fallbackSources.length > 0) {
+        logo.addEventListener('error', function handleLogoError() {
+            if (fallbackIndex >= fallbackSources.length) {
+                logo.removeEventListener('error', handleLogoError);
+                return;
+            }
+
+            const nextSource = fallbackSources[fallbackIndex++];
+            if (!nextSource) {
+                return;
+            }
+
+            requestAnimationFrame(() => {
+                logo.src = nextSource;
+            });
+        });
+    }
+
+    if (primarySource) {
+        logo.src = primarySource;
+    } else if (fallbackSources.length > 0) {
+        const firstFallback = fallbackSources[fallbackIndex++] || '';
+        if (firstFallback) {
+            logo.src = firstFallback;
+        }
+    }
+}
+
 document.addEventListener('DOMContentLoaded', () => {
+    initializeHeaderLogo();
     window.app = new MaterialCalculatorApp();
 });
