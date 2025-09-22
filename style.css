@@ -51,7 +51,7 @@ body.home-background::before {
     background-image: url('images/tes.webp');
     background-repeat: no-repeat;
     background-position: center 45%;
-    background-size: clamp(1020px, 90vw, 1700px);
+    background-size: clamp(1224px, 108vw, 2040px);
     opacity: 0.72;
     filter: brightness(1.12);
 }
