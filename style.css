@@ -126,6 +126,11 @@ main {
     display: flex;
     flex-direction: column;
     align-items: center;
+    width: 100%;
+}
+
+.home-view > * {
+    width: 100%;
 }
 
 .tiles-grid {
@@ -133,6 +138,7 @@ main {
     grid-template-columns: repeat(auto-fit, minmax(210px, 1fr));
     gap: 1.8rem;
     margin-top: clamp(1.5rem, 4vw, 2.8rem);
+    align-self: stretch;
 }
 
 .tile {
