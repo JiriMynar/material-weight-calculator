@@ -406,6 +406,18 @@ class MaterialCalculatorApp {
             document.body.classList.add('home-background');
         }
 
+        const logoHTML = `
+            <figure class="home-logo">
+                <img
+                    alt="TES logo"
+                    class="app-logo"
+                    decoding="async"
+                    data-logo-src="images/mainlogo.svg"
+                    data-logo-fallbacks="images/mainlogo.png, images/mainlogo.webp, images/mainlogo.jpg, images/mainlogo.jpeg"
+                >
+            </figure>
+        `;
+
         const tilesHTML = CALCULATOR_TILES.map((tile) => `
             <div class="tile" role="button" tabindex="0" data-target="${tile.id}"
                  aria-label="Otevřít kalkulačku ${tile.title}">
@@ -418,11 +430,14 @@ class MaterialCalculatorApp {
 
         this.container.innerHTML = `
             <div class="home-view">
+                ${logoHTML}
                 <div class="tiles-grid">
                     ${tilesHTML}
                 </div>
             </div>
         `;
+
+        initializeAppLogo(this.container.querySelector('.app-logo'));
 
         this.container.querySelectorAll('.tile').forEach((tileElement) => {
             tileElement.addEventListener('click', () => {
@@ -888,11 +903,13 @@ S pozdravem`);
     }
 }
 
-function initializeHeaderLogo() {
-    const logo = document.querySelector('.app-logo');
-    if (!logo) {
+function initializeAppLogo(providedLogo) {
+    const logo = providedLogo || (typeof document !== 'undefined' ? document.querySelector('.app-logo') : null);
+    if (!logo || logo.dataset.logoInitialized === 'true') {
         return;
     }
+
+    logo.dataset.logoInitialized = 'true';
 
     const primarySource = (logo.dataset.logoSrc || '').trim();
     const fallbackSources = (logo.dataset.logoFallbacks || '')
@@ -941,6 +958,6 @@ function initializeHeaderLogo() {
 }
 
 document.addEventListener('DOMContentLoaded', () => {
-    initializeHeaderLogo();
+    initializeAppLogo();
     window.app = new MaterialCalculatorApp();
 });
