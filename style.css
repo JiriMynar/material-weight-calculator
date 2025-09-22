@@ -51,9 +51,15 @@ body.home-background::before {
     background-image: url('images/tes.webp');
     background-repeat: no-repeat;
     background-position: center 45%;
-    background-size: clamp(1224px, 108vw, 2040px);
+    background-size: clamp(1320px, 118vw, 2200px);
     opacity: 0.72;
     filter: brightness(1.12);
+}
+
+@media (min-width: 1024px) {
+    body.home-background::before {
+        background-size: clamp(1836px, 162vw, 3060px);
+    }
 }
 
 @media (max-width: 900px) {
@@ -69,18 +75,20 @@ body.home-background::after {
 }
 
 .home-logo {
+    --logo-max-width: min(90vw, 1200px);
+    --logo-max-height: clamp(240px, 52vw, 520px);
     margin: 0;
     display: flex;
     align-items: center;
     justify-content: center;
     width: 100%;
-    padding: clamp(0.5rem, 2vw, 1.5rem) 0;
+    padding: clamp(0.75rem, 3vw, 2.2rem) 0;
 }
 
 .app-logo {
-    width: min(800px, 90vw);
-    max-width: min(800px, 90vw);
-    max-height: clamp(180px, 40vw, 360px);
+    width: min(100%, var(--logo-max-width));
+    max-width: var(--logo-max-width);
+    max-height: var(--logo-max-height);
     height: auto;
     display: block;
     object-fit: contain;
@@ -93,9 +101,23 @@ body.home-background::after {
     opacity: 1;
 }
 
+@media (max-width: 600px) {
+    .home-logo {
+        --logo-max-width: min(92vw, 520px);
+        --logo-max-height: clamp(180px, 48vw, 320px);
+    }
+}
+
+@media (min-width: 1024px) {
+    .home-logo {
+        --logo-max-width: min(90vw, 1600px);
+        --logo-max-height: clamp(360px, 45vw, 720px);
+    }
+}
+
 main {
     padding: 2.8rem clamp(1rem, 5vw, 3.5rem);
-    max-width: 1180px;
+    max-width: 1600px;
     margin: 0 auto;
 }
 
