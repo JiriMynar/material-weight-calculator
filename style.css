@@ -52,7 +52,8 @@ body.home-background::before {
     background-repeat: no-repeat;
     background-position: center 45%;
     background-size: clamp(1020px, 90vw, 1700px);
-    opacity: 0.82;
+    opacity: 0.72;
+    filter: brightness(1.12);
 }
 
 @media (max-width: 900px) {
@@ -64,7 +65,7 @@ body.home-background::before {
 
 body.home-background::after {
     z-index: -1;
-    background: radial-gradient(circle at center, rgba(255, 255, 255, 0) 45%, rgba(255, 255, 255, 0.82) 100%);
+    background: radial-gradient(circle at center, rgba(255, 255, 255, 0.28) 0%, rgba(255, 255, 255, 0.85) 100%);
 }
 
 header {
