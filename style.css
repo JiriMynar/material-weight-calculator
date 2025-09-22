@@ -51,7 +51,7 @@ body.home-background::before {
     background-image: url('images/tes.webp');
     background-repeat: no-repeat;
     background-position: center 45%;
-    background-size: clamp(960px, 85vw, 1600px);
+    background-size: clamp(1020px, 90vw, 1700px);
     opacity: 0.82;
 }
 
@@ -64,7 +64,7 @@ body.home-background::before {
 
 body.home-background::after {
     z-index: -1;
-    background: linear-gradient(180deg, rgba(255, 255, 255, 0.92) 0%, rgba(255, 255, 255, 0.72) 42%, rgba(255, 255, 255, 0.78) 100%);
+    background: radial-gradient(circle at center, rgba(255, 255, 255, 0) 45%, rgba(255, 255, 255, 0.82) 100%);
 }
 
 header {
