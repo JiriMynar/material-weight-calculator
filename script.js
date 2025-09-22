@@ -891,4 +891,3 @@ S pozdravem`);
 document.addEventListener('DOMContentLoaded', () => {
     window.app = new MaterialCalculatorApp();
 });
-style.css
