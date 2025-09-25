@@ -402,9 +402,9 @@ class MaterialCalculatorApp {
                 <img
                     alt="TES logo"
                     class="app-logo"
+                    src="images/mainlogo.png"
                     decoding="async"
-                    data-logo-src="images/mainlogo.svg"
-                    data-logo-fallbacks="images/mainlogo.png, images/mainlogo.webp, images/mainlogo.jpg, images/mainlogo.jpeg"
+                    data-logo-src="images/mainlogo.png"
                 >
             </figure>
         `;
@@ -595,13 +595,16 @@ class MaterialCalculatorApp {
 
         return `
             <section class="flatbar-calculator" data-flatbar="${calculator.id}">
-                <h3>${calculator.title}</h3>
-                <div class="flatbar-fields">
-                    <div class="input-group">
-                        <label for="${innerDiameterId}">Vnitřní průměr (mm)</label>
+                <header class="flatbar-calculator__header">
+                    <h3>${calculator.title}</h3>
+                </header>
+                <div class="flatbar-calculator__body">
+                    <div class="flatbar-field">
+                        <label class="flatbar-field__label" for="${innerDiameterId}">Vnitřní průměr (mm)</label>
                         <input
                             id="${innerDiameterId}"
                             name="${innerDiameterId}"
+                            class="flatbar-field__input"
                             type="number"
                             inputmode="decimal"
                             min="0"
@@ -610,11 +613,12 @@ class MaterialCalculatorApp {
                             placeholder="Zadejte hodnotu"
                         />
                     </div>
-                    <div class="input-group">
-                        <label for="${thicknessId}">Síla plechu (mm)</label>
+                    <div class="flatbar-field">
+                        <label class="flatbar-field__label" for="${thicknessId}">Síla plechu (mm)</label>
                         <input
                             id="${thicknessId}"
                             name="${thicknessId}"
+                            class="flatbar-field__input"
                             type="number"
                             inputmode="decimal"
                             min="0"
@@ -624,10 +628,10 @@ class MaterialCalculatorApp {
                         />
                     </div>
                 </div>
-                <div class="flatbar-result-card" role="status" aria-live="polite">
+                <footer class="flatbar-calculator__result flatbar-result-card" role="status" aria-live="polite">
                     <span class="flatbar-result-label">Rozvinutá délka</span>
                     <span id="${resultId}" class="flatbar-result-value">0 mm</span>
-                </div>
+                </footer>
             </section>
         `;
     }
