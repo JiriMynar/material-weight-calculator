@@ -586,7 +586,7 @@ class MaterialCalculatorApp {
         }
 
         const innerDiameterId = this.getFlatBarFieldId(calculator, 'inner-diameter');
-        the thicknessId = this.getFlatBarFieldId(calculator, 'sheet-thickness');
+        const thicknessId = this.getFlatBarFieldId(calculator, 'sheet-thickness');
         const resultId = this.getFlatBarFieldId(calculator, 'result');
 
         return `
