@@ -343,6 +343,7 @@ class MaterialCalculatorApp {
         this.container = document.getElementById('app-container');
         this.currentView = 'home';
         this.profileData = null;
+        this.flatBarCalculators = [];
 
         this.calculate = this.calculate.bind(this);
         this.resetCalculator = this.resetCalculator.bind(this);
@@ -527,8 +528,20 @@ class MaterialCalculatorApp {
                 <div class="flatbar-calculators">
                     ${sectionsHTML}
                 </div>
+                <div class="calculator-actions">
+                    <button type="button" class="btn btn-primary screenshot-btn">
+                        <span class="btn-icon" aria-hidden="true">📷</span>
+                        <span>Snímek obrazovky</span>
+                    </button>
+                    <button type="button" class="btn btn-primary export-btn">
+                        <span class="btn-icon" aria-hidden="true">📧</span>
+                        <span>Uložit do e-mailu</span>
+                    </button>
+                </div>
             </div>
         `;
+
+        this.flatBarCalculators = calculators.slice();
 
         const backButton = this.container.querySelector('.back-btn');
         if (backButton) {
@@ -538,6 +551,16 @@ class MaterialCalculatorApp {
         const resetButton = this.container.querySelector('.reset-btn');
         if (resetButton) {
             resetButton.addEventListener('click', () => this.resetFlatBarCalculators(calculators));
+        }
+
+        const screenshotButton = this.container.querySelector('.screenshot-btn');
+        if (screenshotButton) {
+            screenshotButton.addEventListener('click', this.takeScreenshot);
+        }
+
+        const exportButton = this.container.querySelector('.export-btn');
+        if (exportButton) {
+            exportButton.addEventListener('click', this.exportToEmail);
         }
 
         this.setupFlatBarCalculatorEvents(calculators);
@@ -682,6 +705,57 @@ class MaterialCalculatorApp {
                 resultInput.value = '';
             }
         });
+
+        this.calculateFlatBar();
+    }
+
+    computeFlatBarResult(calculator) {
+        if (!calculator || !calculator.id) {
+            return;
+        }
+
+        const innerDiameterId = this.getFlatBarFieldId(calculator, 'inner-diameter');
+        the thicknessId = this.getFlatBarFieldId(calculator, 'sheet-thickness');
+        const resultId = this.getFlatBarFieldId(calculator, 'result');
+
+        const diameterInput = document.getElementById(innerDiameterId);
+        const thicknessInput = document.getElementById(thicknessId);
+        const resultInput = document.getElementById(resultId);
+
+        if (!diameterInput || !thicknessInput || !resultInput) {
+            return;
+        }
+
+        const diameterRaw = diameterInput.value;
+        const thicknessRaw = thicknessInput.value;
+
+        if (!this.hasInputValue(diameterRaw) || !this.hasInputValue(thicknessRaw)) {
+            resultInput.value = '';
+            return;
+        }
+
+        const diameterValue = this.parseDecimalValue(diameterRaw);
+        const thicknessValue = this.parseDecimalValue(thicknessRaw);
+
+        if (!Number.isFinite(diameterValue) || !Number.isFinite(thicknessValue)) {
+            resultInput.value = '';
+            return;
+        }
+
+        const adjustmentValue = Number.parseFloat(calculator.adjustment);
+        const adjustment = Number.isFinite(adjustmentValue) ? adjustmentValue : 0;
+        const computed = (diameterValue * FLATBAR_LENGTH_PI) + (3 * thicknessValue) + adjustment;
+        const rounded = Math.round(computed);
+
+        resultInput.value = Number.isFinite(rounded) ? String(rounded) : '';
+    }
+
+    calculateFlatBar() {
+        if (!Array.isArray(this.flatBarCalculators) || this.flatBarCalculators.length === 0) {
+            return;
+        }
+
+        this.flatBarCalculators.forEach((calculator) => this.computeFlatBarResult(calculator));
     }
 
     parseDecimalValue(value) {
@@ -1054,6 +1128,11 @@ class MaterialCalculatorApp {
 
     exportToEmail() {
         try {
+            if (this.currentView === 'plochace') {
+                this.exportFlatBarToEmail();
+                return;
+            }
+
             const config = CALCULATORS[this.currentView];
             if (!config) {
                 return;
@@ -1115,6 +1194,102 @@ S pozdravem`);
             window.location.href = `mailto:?subject=${subject}&body=${body}`;
         } catch (error) {
             console.error('Chyba při exportu dat:', error);
+            alert('Chyba při exportu dat.');
+        }
+    }
+
+    exportFlatBarToEmail() {
+        try {
+            const calculators = Array.isArray(this.flatBarCalculators) ? this.flatBarCalculators : [];
+            if (calculators.length === 0) {
+                alert('Pro export nejsou dostupné žádné kalkulačky.');
+                return;
+            }
+
+            const config = CALCULATORS.plochace;
+            const timestamp = new Date();
+            const calculatorData = {
+                type: 'plochace',
+                title: config ? config.title : 'Plocháče',
+                timestamp: timestamp.toISOString(),
+                calculators: []
+            };
+
+            const summaryLines = [];
+
+            calculators.forEach((calculator) => {
+                const section = this.container.querySelector(`.flatbar-calculator[data-flatbar="${calculator.id}"]`);
+                if (!section) {
+                    return;
+                }
+
+                const innerDiameterId = this.getFlatBarFieldId(calculator, 'inner-diameter');
+                const thicknessId = this.getFlatBarFieldId(calculator, 'sheet-thickness');
+                const resultId = this.getFlatBarFieldId(calculator, 'result');
+
+                const diameterInput = section.querySelector(`#${innerDiameterId}`);
+                const thicknessInput = section.querySelector(`#${thicknessId}`);
+                const resultInput = section.querySelector(`#${resultId}`);
+
+                const getLabel = (fieldId) => {
+                    const labelElement = section.querySelector(`label[for="${fieldId}"]`);
+                    return labelElement && labelElement.textContent ? labelElement.textContent : fieldId;
+                };
+
+                const entry = {
+                    id: calculator.id,
+                    title: calculator.title,
+                    inputs: {
+                        [innerDiameterId]: {
+                            label: getLabel(innerDiameterId),
+                            value: diameterInput ? diameterInput.value : ''
+                        },
+                        [thicknessId]: {
+                            label: getLabel(thicknessId),
+                            value: thicknessInput ? thicknessInput.value : ''
+                        }
+                    },
+                    result: {
+                        label: getLabel(resultId),
+                        value: resultInput ? resultInput.value : ''
+                    }
+                };
+
+                calculatorData.calculators.push(entry);
+
+                const formattedResult = entry.result.value ? `${entry.result.value} mm` : 'nezadáno';
+                summaryLines.push(`${calculator.title}: ${formattedResult}`);
+            });
+
+            const jsonData = JSON.stringify(calculatorData, null, 2);
+            const blob = new Blob([jsonData], { type: 'application/json' });
+            const url = URL.createObjectURL(blob);
+            const link = document.createElement('a');
+            link.href = url;
+            link.download = `kalkulator-vysledky-plochace-${timestamp.toISOString().slice(0, 10)}.json`;
+            document.body.appendChild(link);
+            link.click();
+            document.body.removeChild(link);
+            URL.revokeObjectURL(url);
+
+            const subject = encodeURIComponent('Výsledky výpočtu z aplikace Kalkulátor hmotnosti materiálů');
+            const summaryText = summaryLines.length > 0
+                ? summaryLines.join('\n')
+                : 'Výsledky nejsou k dispozici.';
+            const body = encodeURIComponent(`Dobrý den,
+
+přikládám výsledky výpočtu z aplikace Kalkulátor hmotnosti materiálů.
+
+Typ výpočtu: ${calculatorData.title}
+Výsledky:
+${summaryText}
+Datum: ${timestamp.toLocaleDateString('cs-CZ')}
+
+S pozdravem`);
+
+            window.location.href = `mailto:?subject=${subject}&body=${body}`;
+        } catch (error) {
+            console.error('Chyba při exportu plocháčů:', error);
             alert('Chyba při exportu dat.');
         }
     }
