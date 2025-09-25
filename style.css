@@ -461,17 +461,6 @@ main {
     gap: 2rem;
 }
 
-.calculator-view--flatbar .flatbar-description {
-    background: linear-gradient(180deg, rgba(255, 255, 255, 0.92) 0%, rgba(247, 249, 242, 0.92) 100%);
-    border-radius: var(--radius-large);
-    padding: 1.5rem 1.8rem;
-    border: 1px solid rgba(166, 206, 57, 0.22);
-    box-shadow: var(--shadow-card);
-    color: var(--color-muted);
-    font-size: 0.95rem;
-    line-height: 1.7;
-}
-
 .calculator-view--flatbar .flatbar-calculators {
     display: grid;
     gap: 1.9rem;
