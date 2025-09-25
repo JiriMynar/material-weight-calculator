@@ -67,8 +67,8 @@ const CALCULATORS = {
             }
 
             const area = (Math.PI * (D ** 2 - d ** 2)) / 4;
-            const volume = area * L; // mm³
-            const volumeM3 = volume / 1_000_000_000; // m³
+            const volume = area * L;
+            const volumeM3 = volume / 1_000_000_000;
 
             return volumeM3 * density;
         }
@@ -402,9 +402,9 @@ class MaterialCalculatorApp {
                 <img
                     alt="TES logo"
                     class="app-logo"
-                    src="images/mainlogo.png"
                     decoding="async"
-                    data-logo-src="images/mainlogo.png"
+                    data-logo-src="images/mainlogo.svg"
+                    data-logo-fallbacks="images/mainlogo.png, images/mainlogo.webp, images/mainlogo.jpg, images/mainlogo.jpeg"
                 >
             </figure>
         `;
@@ -525,10 +525,6 @@ class MaterialCalculatorApp {
                     <button type="button" class="btn btn-danger reset-btn">Resetovat</button>
                 </div>
                 <div class="flatbar-content">
-                    <p class="flatbar-description">
-                        Zadejte hodnoty pro jednotlivé případy a kliknutím na tlačítko <strong>Vypočítej</strong>
-                        získáte rozvinutou délku v milimetrech. Hodnoty se přepočítávají také automaticky při změně vstupů.
-                    </p>
                     <div class="flatbar-calculators">
                         ${sectionsHTML}
                     </div>
@@ -590,7 +586,7 @@ class MaterialCalculatorApp {
         }
 
         const innerDiameterId = this.getFlatBarFieldId(calculator, 'inner-diameter');
-        const thicknessId = this.getFlatBarFieldId(calculator, 'sheet-thickness');
+        the thicknessId = this.getFlatBarFieldId(calculator, 'sheet-thickness');
         const resultId = this.getFlatBarFieldId(calculator, 'result');
 
         return `
@@ -630,7 +626,7 @@ class MaterialCalculatorApp {
                 </div>
                 <footer class="flatbar-calculator__result flatbar-result-card" role="status" aria-live="polite">
                     <span class="flatbar-result-label">Rozvinutá délka</span>
-                    <span id="${resultId}" class="flatbar-result-value">0 mm</span>
+                    <span id="${resultId}" class="flatbar-result-value">— mm</span>
                 </footer>
             </section>
         `;
@@ -656,12 +652,22 @@ class MaterialCalculatorApp {
                 return;
             }
 
-            const recalculate = () => {
+            const pendingText = '— mm';
+            resultElement.textContent = pendingText;
+            resultElement.dataset.pending = 'true';
+
+            const markPending = () => {
+                resultElement.textContent = pendingText;
+                resultElement.dataset.pending = 'true';
+            };
+
+            const computeLength = () => {
                 const diameterRaw = diameterInput.value;
                 const thicknessRaw = thicknessInput.value;
 
                 if (!this.hasInputValue(diameterRaw) || !this.hasInputValue(thicknessRaw)) {
                     resultElement.textContent = '0 mm';
+                    resultElement.dataset.pending = 'false';
                     return;
                 }
 
@@ -670,6 +676,7 @@ class MaterialCalculatorApp {
 
                 if (!Number.isFinite(diameterValue) || !Number.isFinite(thicknessValue)) {
                     resultElement.textContent = '0 mm';
+                    resultElement.dataset.pending = 'false';
                     return;
                 }
 
@@ -682,20 +689,15 @@ class MaterialCalculatorApp {
                     : '0';
 
                 resultElement.textContent = `${formatted} mm`;
+                resultElement.dataset.pending = 'false';
             };
 
-            const handleChange = () => {
-                recalculate();
-            };
+            ['input', 'change'].forEach((eventName) => {
+                diameterInput.addEventListener(eventName, markPending);
+                thicknessInput.addEventListener(eventName, markPending);
+            });
 
-            diameterInput.addEventListener('input', handleChange);
-            diameterInput.addEventListener('change', handleChange);
-            thicknessInput.addEventListener('input', handleChange);
-            thicknessInput.addEventListener('change', handleChange);
-
-            recalculate();
-
-            recalculateCallbacks.push(recalculate);
+            recalculateCallbacks.push(computeLength);
         });
 
         return recalculateCallbacks;
@@ -726,7 +728,8 @@ class MaterialCalculatorApp {
             }
 
             if (resultElement) {
-                resultElement.textContent = '0 mm';
+                resultElement.textContent = '— mm';
+                resultElement.dataset.pending = 'true';
             }
         });
     }
