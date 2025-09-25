@@ -229,30 +229,19 @@ const CALCULATORS = {
     },
     'plochace': {
         title: 'Plocháče',
-        resultLabel: 'Hmotnost:',
-        resultUnit: 'kg',
-        showMaterialSelector: true,
-        inputs: [
-            { id: 'width', label: 'Šířka [mm]', type: 'number' },
-            { id: 'thickness', label: 'Tloušťka [mm]', type: 'number' },
-            { id: 'length', label: 'Délka [mm]', type: 'number' }
-        ],
-        compute: (app) => {
-            const width = app.readNumber('width');
-            const thickness = app.readNumber('thickness');
-            const length = app.readNumber('length');
-            const density = app.getMaterialDensity();
-
-            if (width <= 0 || thickness <= 0 || length <= 0) {
-                return 0;
+        customRender: (app, config) => app.renderFlatBarLengthCalculators(config),
+        calculators: [
+            {
+                id: 'flatbar-under-40',
+                title: 'Výpočet rozvinuté délky pro plechy do tl. 40 mm',
+                adjustment: -5
+            },
+            {
+                id: 'flatbar-over-40',
+                title: 'Výpočet rozvinuté délky pro plechy nad tl. 40 mm a ETZ',
+                adjustment: -35
             }
-
-            const area = width * thickness;
-            const volume = area * length;
-            const volumeM3 = volume / 1_000_000_000;
-
-            return volumeM3 * density;
-        }
+        ]
     },
     'profil-iu': {
         title: 'Profil I+U',
@@ -346,6 +335,8 @@ const CALCULATORS = {
         }
     }
 };
+
+const FLATBAR_LENGTH_PI = 3.14;
 
 class MaterialCalculatorApp {
     constructor() {
@@ -467,6 +458,11 @@ class MaterialCalculatorApp {
             return;
         }
 
+        if (typeof config.customRender === 'function') {
+            config.customRender(this, config);
+            return;
+        }
+
         const materialSelectorHTML = config.showMaterialSelector !== false
             ? this.renderMaterialSelector()
             : '';
@@ -509,6 +505,227 @@ class MaterialCalculatorApp {
         `;
 
         this.attachCalculatorEvents(config);
+    }
+
+    renderFlatBarLengthCalculators(config) {
+        if (!this.container) {
+            return;
+        }
+
+        const calculators = Array.isArray(config.calculators) ? config.calculators : [];
+        const sectionsHTML = calculators.length > 0
+            ? calculators.map((calculator) => this.buildFlatBarCalculatorMarkup(calculator)).join('')
+            : '<p class="flatbar-empty">Konfigurace kalkulaček se nepodařilo načíst.</p>';
+
+        this.container.innerHTML = `
+            <div class="calculator-view calculator-view--flatbar" data-calculator="plochace">
+                <div class="calculator-header">
+                    <button type="button" class="btn btn-secondary back-btn">← Zpět</button>
+                    <h2>${config.title}</h2>
+                    <button type="button" class="btn btn-danger reset-btn">Resetovat</button>
+                </div>
+                <div class="flatbar-calculators">
+                    ${sectionsHTML}
+                </div>
+            </div>
+        `;
+
+        const backButton = this.container.querySelector('.back-btn');
+        if (backButton) {
+            backButton.addEventListener('click', () => this.loadView('home'));
+        }
+
+        const resetButton = this.container.querySelector('.reset-btn');
+        if (resetButton) {
+            resetButton.addEventListener('click', () => this.resetFlatBarCalculators(calculators));
+        }
+
+        this.setupFlatBarCalculatorEvents(calculators);
+    }
+
+    buildFlatBarCalculatorMarkup(calculator) {
+        if (!calculator || !calculator.id) {
+            return '';
+        }
+
+        const innerDiameterId = this.getFlatBarFieldId(calculator, 'inner-diameter');
+        const thicknessId = this.getFlatBarFieldId(calculator, 'sheet-thickness');
+        const resultId = this.getFlatBarFieldId(calculator, 'result');
+
+        return `
+            <section class="flatbar-calculator" data-flatbar="${calculator.id}">
+                <h3>${calculator.title}</h3>
+                <div class="flatbar-fields">
+                    <div class="input-group">
+                        <label for="${innerDiameterId}">Vnitřní průměr (mm)</label>
+                        <input
+                            id="${innerDiameterId}"
+                            name="${innerDiameterId}"
+                            type="number"
+                            inputmode="decimal"
+                            min="0"
+                            step="0.01"
+                            autocomplete="off"
+                            placeholder="Zadejte hodnotu"
+                        />
+                    </div>
+                    <div class="input-group">
+                        <label for="${thicknessId}">Síla plechu (mm)</label>
+                        <input
+                            id="${thicknessId}"
+                            name="${thicknessId}"
+                            type="number"
+                            inputmode="decimal"
+                            min="0"
+                            step="0.01"
+                            autocomplete="off"
+                            placeholder="Zadejte hodnotu"
+                        />
+                    </div>
+                    <div class="input-group flatbar-result" role="status" aria-live="polite">
+                        <label for="${resultId}">Rozvinutá délka (mm)</label>
+                        <input
+                            id="${resultId}"
+                            name="${resultId}"
+                            type="text"
+                            inputmode="numeric"
+                            readonly
+                            placeholder="Výsledek"
+                        />
+                    </div>
+                </div>
+            </section>
+        `;
+    }
+
+    setupFlatBarCalculatorEvents(calculators) {
+        if (!Array.isArray(calculators)) {
+            return;
+        }
+
+        calculators.forEach((calculator) => {
+            const innerDiameterId = this.getFlatBarFieldId(calculator, 'inner-diameter');
+            const thicknessId = this.getFlatBarFieldId(calculator, 'sheet-thickness');
+            const resultId = this.getFlatBarFieldId(calculator, 'result');
+
+            const diameterInput = document.getElementById(innerDiameterId);
+            const thicknessInput = document.getElementById(thicknessId);
+            const resultInput = document.getElementById(resultId);
+
+            if (!diameterInput || !thicknessInput || !resultInput) {
+                return;
+            }
+
+            const recalculate = () => {
+                const diameterRaw = diameterInput.value;
+                const thicknessRaw = thicknessInput.value;
+
+                if (!this.hasInputValue(diameterRaw) || !this.hasInputValue(thicknessRaw)) {
+                    resultInput.value = '';
+                    return;
+                }
+
+                const diameterValue = this.parseDecimalValue(diameterRaw);
+                const thicknessValue = this.parseDecimalValue(thicknessRaw);
+
+                if (!Number.isFinite(diameterValue) || !Number.isFinite(thicknessValue)) {
+                    resultInput.value = '';
+                    return;
+                }
+
+                const adjustmentValue = Number.parseFloat(calculator.adjustment);
+                const adjustment = Number.isFinite(adjustmentValue) ? adjustmentValue : 0;
+                const computed = (diameterValue * FLATBAR_LENGTH_PI) + (3 * thicknessValue) + adjustment;
+                const rounded = Math.round(computed);
+
+                resultInput.value = Number.isFinite(rounded) ? String(rounded) : '';
+            };
+
+            const handleChange = () => {
+                recalculate();
+            };
+
+            diameterInput.addEventListener('input', handleChange);
+            diameterInput.addEventListener('change', handleChange);
+            thicknessInput.addEventListener('input', handleChange);
+            thicknessInput.addEventListener('change', handleChange);
+
+            recalculate();
+        });
+    }
+
+    resetFlatBarCalculators(calculators) {
+        if (!Array.isArray(calculators)) {
+            return;
+        }
+
+        calculators.forEach((calculator) => {
+            const innerDiameterId = this.getFlatBarFieldId(calculator, 'inner-diameter');
+            const thicknessId = this.getFlatBarFieldId(calculator, 'sheet-thickness');
+            const resultId = this.getFlatBarFieldId(calculator, 'result');
+
+            const diameterInput = document.getElementById(innerDiameterId);
+            const thicknessInput = document.getElementById(thicknessId);
+            const resultInput = document.getElementById(resultId);
+
+            if (diameterInput) {
+                diameterInput.value = '';
+                this.emitInputEvent(diameterInput);
+            }
+
+            if (thicknessInput) {
+                thicknessInput.value = '';
+                this.emitInputEvent(thicknessInput);
+            }
+
+            if (resultInput) {
+                resultInput.value = '';
+            }
+        });
+    }
+
+    parseDecimalValue(value) {
+        if (typeof value !== 'string') {
+            return NaN;
+        }
+
+        const normalizedValue = value.trim().replace(',', '.');
+        if (normalizedValue === '') {
+            return NaN;
+        }
+
+        const parsed = Number.parseFloat(normalizedValue);
+        return Number.isFinite(parsed) ? parsed : NaN;
+    }
+
+    hasInputValue(value) {
+        return typeof value === 'string' && value.trim() !== '';
+    }
+
+    getFlatBarFieldId(calculator, field) {
+        const baseId = calculator && calculator.id ? calculator.id : 'flatbar';
+        return `${baseId}-${field}`;
+    }
+
+    emitInputEvent(element) {
+        if (!element || typeof element.dispatchEvent !== 'function') {
+            return;
+        }
+
+        try {
+            if (typeof Event === 'function') {
+                element.dispatchEvent(new Event('input', { bubbles: true }));
+                return;
+            }
+
+            if (typeof document !== 'undefined' && typeof document.createEvent === 'function') {
+                const event = document.createEvent('Event');
+                event.initEvent('input', true, true);
+                element.dispatchEvent(event);
+            }
+        } catch (error) {
+            console.warn('Chyba při odeslání události input:', error);
+        }
     }
 
     renderMaterialSelector() {
