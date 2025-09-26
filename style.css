@@ -82,7 +82,7 @@ body.home-background::after {
     align-items: center;
     justify-content: center;
     width: 100%;
-    padding: clamp(0.75rem, 3vw, 2.2rem) 0;
+    padding: clamp(0.375rem, 1.5vw, 1.1rem) 0;
 }
 
 .app-logo {
@@ -123,7 +123,7 @@ main {
 
 .loading {
     text-align: center;
-    padding: 3rem 1rem;
+    padding: 1.5rem 1rem;
     font-size: 1.1rem;
     color: var(--color-muted);
 }
