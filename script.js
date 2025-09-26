@@ -1155,6 +1155,7 @@ class MaterialCalculatorApp {
 
             const resultElement = document.getElementById('result-weight');
             const resultText = resultElement && resultElement.textContent ? resultElement.textContent : '';
+            const resultLabelText = (config.resultLabel || 'Výsledek').replace(/\s*[:：]\s*$/, '');
 
             const calculatorData = {
                 type: this.currentView,
@@ -1162,6 +1163,8 @@ class MaterialCalculatorApp {
                 timestamp: new Date().toISOString(),
                 inputs: {},
                 result: resultText,
+                resultLabel: resultLabelText,
+                resultUnit: config.resultUnit || '',
                 notes: ''
             };
 
@@ -1184,10 +1187,13 @@ class MaterialCalculatorApp {
 
             const materialSelect = document.getElementById('material-select');
             if (materialSelect) {
+                const materialValue = materialSelect.value;
+                const materialDensity = MATERIAL_DENSITIES[materialValue];
                 calculatorData.material = {
-                    value: materialSelect.value,
-                    label: MATERIAL_LABELS[materialSelect.value] || materialSelect.value
+                    value: materialValue,
+                    label: MATERIAL_LABELS[materialValue] || materialValue
                 };
+                calculatorData.materialDensity = materialDensity;
             }
 
             const jsonData = JSON.stringify(calculatorData, null, 2);
@@ -1202,18 +1208,51 @@ class MaterialCalculatorApp {
             URL.revokeObjectURL(url);
 
             const subject = encodeURIComponent('Výsledky výpočtu z aplikace Kalkulátor hmotnosti materiálů');
+                        const formattedDate = new Date().toLocaleDateString('cs-CZ');
+            const inputValues = Object.values(calculatorData.inputs || {})
+                .map((field) => {
+                    const label = field && field.label ? String(field.label).trim() : '';
+                    const rawValue = field && typeof field.value !== 'undefined' && field.value !== null
+                        ? String(field.value).trim()
+                        : '';
+                    const valueText = rawValue !== '' ? rawValue : '(neuvedeno)';
+                    return label ? `${label}: ${valueText}` : valueText;
+                })
+                .filter((line) => line && line !== '(neuvedeno)');
+
+            const materialLabel = calculatorData.material && calculatorData.material.label
+                ? calculatorData.material.label
+                : '(neuvedeno)';
+            const materialDensity = typeof calculatorData.materialDensity === 'number'
+                ? `${new Intl.NumberFormat('cs-CZ').format(calculatorData.materialDensity)} kg/m³`
+                : '(neuvedeno)';
+
             const notesText = calculatorData.notes && calculatorData.notes.trim() !== ''
-                ? `\nPoznámky:\n${calculatorData.notes.trim()}\n`
-                : '';
-            const body = encodeURIComponent(`Dobrý den,
+                ? calculatorData.notes.trim()
+                : '(neuvedeno)';
 
-přikládám výsledky výpočtu z aplikace Kalkulátor hmotnosti materiálů.
+            const bodyLines = [
+                'Dobrý den,',
+                '',
+                'přikládám výsledky výpočtu z aplikace Kalkulátor hmotnosti materiálů.',
+                '',
+                `Typ výpočtu: ${config.title}`,
+                `${calculatorData.resultLabel}: ${calculatorData.result}`,
+                `Datum: ${formattedDate}`,
+                '',
+                'Naměřené hodnoty:',
+                inputValues.length > 0 ? inputValues.join('\n') : '(neuvedeno)',
+                '',
+                `Materiál: ${materialLabel}`,
+                `Hustota materiálu: ${materialDensity}`,
+                '',
+                'Poznámky:',
+                notesText,
+                '',
+                'S pozdravem'
+            ];
 
-Typ výpočtu: ${config.title}
-Výsledek: ${calculatorData.result}
-Datum: ${new Date().toLocaleDateString('cs-CZ')}
-${notesText}
-S pozdravem`);
+            const body = encodeURIComponent(bodyLines.join('\n'));
 
             window.location.href = `mailto:?subject=${subject}&body=${body}`;
         } catch (error) {
