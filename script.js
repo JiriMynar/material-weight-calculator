@@ -1,16 +1,16 @@
 const MATERIAL_DENSITIES = {
     'ocel-tazena': 7850,
-    'litina-seda': 7200,
-    'litina-temperovana': 7200,
-    'dynamoplech-m350': 7850,
-    'dynamoplech-m400-530': 7850,
-    'dynamoplech-m600-800': 7850,
-    'ocel-rychlorezna': 7850,
-    'mosaz': 8500,
-    'med': 8960,
-    'bronz': 8800,
+    'litina-seda': 7250,
+    'litina-temperovana': 7400,
+    'dynamoplech-m350': 7650,
+    'dynamoplech-m400-530': 7700,
+    'dynamoplech-m600-800': 7800,
+    'ocel-rychlorezna': 8500,
+    'mosaz': 8600,
+    'med': 8900,
+    'bronz': 8700,
     'hlinik': 2700,
-    'pvc': 1400,
+    'pvc': 1700,
     'voda': 1000
 };
 
@@ -821,7 +821,6 @@ class MaterialCalculatorApp {
                     inputmode="decimal"
                     min="0"
                     step="0.01"
-                    value="0"
                     autocomplete="off"
                 />
             </div>
@@ -951,7 +950,7 @@ class MaterialCalculatorApp {
 
         form.querySelectorAll('input').forEach((input) => {
             if (input.type === 'number' || input.getAttribute('type') === 'number') {
-                input.value = '0';
+                input.value = '';
             } else {
                 input.value = '';
             }
