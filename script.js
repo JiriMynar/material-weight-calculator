@@ -710,8 +710,7 @@ class MaterialCalculatorApp {
         if (!Array.isArray(calculators)) {
             return;
         }
-
-         const notesField = this.container.querySelector('#calculator-notes');
+const notesField = this.container.querySelector('#calculator-notes');
         if (notesField) {
             notesField.value = '';
         }
@@ -801,7 +800,7 @@ class MaterialCalculatorApp {
         `;
     }
 
-        renderNotesField() {
+    renderNotesField() {
         return `
             <section class="calculator-notes">
                 <label for="calculator-notes">Poznámky</label>
@@ -1088,19 +1087,65 @@ class MaterialCalculatorApp {
             const title = titleElement && titleElement.textContent ? titleElement.textContent : '';
             ctx.font = '20px Segoe UI';
             ctx.fillText(title, 24, 90);
-
+            const isFlatbarView = this.currentView === 'plochace';
             let y = 130;
-            calculatorView.querySelectorAll('.input-group').forEach((group) => {
-                const labelElement = group.querySelector('label');
-                const label = labelElement && labelElement.textContent ? labelElement.textContent : '';
-                const input = group.querySelector('input, select');
-                const value = input && typeof input.value !== 'undefined' ? input.value : '';
-                ctx.font = '16px Segoe UI';
-                ctx.fillText(`${label}: ${value}`, 24, y);
-                y += 30;
-            });
+                        if (isFlatbarView) {
+                calculatorView.querySelectorAll('.flatbar-calculator').forEach((section) => {
+                    const titleElement = section.querySelector('.flatbar-calculator__header h3');
+                    const titleText = titleElement && titleElement.textContent ? titleElement.textContent.trim() : '';
+                    const resultLabelElement = section.querySelector('.flatbar-result-label');
+                    const resultLabelText = resultLabelElement && resultLabelElement.textContent
+                        ? resultLabelElement.textContent.trim()
+                        : 'Výsledek';
 
-             const notesElement = document.getElementById('calculator-notes');
+                    if (titleText) {
+                        ctx.font = '18px Segoe UI';
+                        ctx.fillStyle = '#000000';
+                        ctx.fillText(titleText, 24, y);
+                        y += 28;
+                    }
+
+                    section.querySelectorAll('.flatbar-field').forEach((field) => {
+                        const labelElement = field.querySelector('.flatbar-field__label');
+                        const label = labelElement && labelElement.textContent ? labelElement.textContent.trim() : '';
+                        const input = field.querySelector('.flatbar-field__input');
+                        const value = input && typeof input.value !== 'undefined' ? String(input.value) : '';
+
+                        if (label) {
+                            ctx.font = '16px Segoe UI';
+                            ctx.fillStyle = '#000000';
+                            ctx.fillText(`${label}: ${value}`, 24, y);
+                            y += 24;
+                        }
+                    });
+
+                    const resultElement = section.querySelector('.flatbar-result-value');
+                    const resultText = resultElement && resultElement.textContent ? resultElement.textContent.trim() : '';
+
+                    if (resultText) {
+                        ctx.font = '16px Segoe UI';
+                        ctx.fillStyle = '#5f8f11';
+                        ctx.fillText(`${resultLabelText}: ${resultText}`, 24, y);
+                        y += 32;
+                    }
+
+                    y += 10;
+                });
+            } else {
+                calculatorView.querySelectorAll('.input-group').forEach((group) => {
+                    const labelElement = group.querySelector('label');
+                    const label = labelElement && labelElement.textContent ? labelElement.textContent : '';
+                    const input = group.querySelector('input, select');
+                    const value = input && typeof input.value !== 'undefined' ? input.value : '';
+                    ctx.font = '16px Segoe UI';
+                    ctx.fillStyle = '#000000';
+                    ctx.fillText(`${label}: ${value}`, 24, y);
+                    y += 30;
+                });
+            }
+
+            const notesElement = document.getElementById('calculator-notes');
+
             const notes = notesElement && notesElement.value ? notesElement.value.trim() : '';
 
             if (notes) {
@@ -1120,11 +1165,13 @@ class MaterialCalculatorApp {
                 });
             }
             
-            const resultElement = calculatorView.querySelector('#result-weight');
-            const result = resultElement && resultElement.textContent ? resultElement.textContent : '';
-            ctx.font = '18px Segoe UI';
-            ctx.fillStyle = '#5f8f11';
-            ctx.fillText(`Výsledek: ${result}`, 24, y + 20);
+            if (!isFlatbarView) {
+                const resultElement = calculatorView.querySelector('#result-weight');
+                const result = resultElement && resultElement.textContent ? resultElement.textContent : '';
+                ctx.font = '18px Segoe UI';
+                ctx.fillStyle = '#5f8f11';
+                ctx.fillText(`Výsledek: ${result}`, 24, y + 20);
+            }
 
             canvas.toBlob((blob) => {
                 if (!blob) {
@@ -1152,21 +1199,93 @@ class MaterialCalculatorApp {
             if (!config) {
                 return;
             }
-
-            const resultElement = document.getElementById('result-weight');
-            const resultText = resultElement && resultElement.textContent ? resultElement.textContent : '';
-            const resultLabelText = (config.resultLabel || 'Výsledek').replace(/\s*[:：]\s*$/, '');
+            const isFlatbarView = this.currentView === 'plochace';
+            let resultLabelText = (config.resultLabel || 'Výsledek').replace(/\s*[:：]\s*$/, '');
+            let resultText = '';
+            
 
             const calculatorData = {
                 type: this.currentView,
                 title: config.title,
                 timestamp: new Date().toISOString(),
                 inputs: {},
-                result: resultText,
+                result: '',
                 resultLabel: resultLabelText,
                 resultUnit: config.resultUnit || '',
                 notes: ''
             };
+            if (isFlatbarView) {
+                const flatbarSections = Array.from(this.container.querySelectorAll('.flatbar-calculator'));
+                const flatbarData = flatbarSections.map((section) => {
+                    const sectionId = section.getAttribute('data-flatbar') || '';
+                    const titleElement = section.querySelector('.flatbar-calculator__header h3');
+                    const title = titleElement && titleElement.textContent ? titleElement.textContent.trim() : sectionId;
+                    const resultLabelElement = section.querySelector('.flatbar-result-label');
+                    const resultLabel = resultLabelElement && resultLabelElement.textContent
+                        ? resultLabelElement.textContent.trim()
+                        : 'Výsledek';
+
+                    const fields = Array.from(section.querySelectorAll('.flatbar-field')).map((field) => {
+                        const inputElement = field.querySelector('.flatbar-field__input');
+                        const id = inputElement && inputElement.id ? inputElement.id : '';
+                        const labelElement = field.querySelector('.flatbar-field__label');
+                        const label = labelElement && labelElement.textContent ? labelElement.textContent.trim() : id;
+                        const value = inputElement && typeof inputElement.value !== 'undefined'
+                            ? String(inputElement.value)
+                            : '';
+
+                        if (id) {
+                            calculatorData.inputs[id] = { label, value };
+                        }
+
+                        return { id, label, value };
+                    });
+
+                    const resultElement = section.querySelector('.flatbar-result-value');
+                    const sectionResult = resultElement && resultElement.textContent
+                        ? resultElement.textContent.trim()
+                        : '';
+                    const resultValue = sectionResult && sectionResult !== '' ? sectionResult : '— mm';
+
+                    if (sectionId) {
+                        calculatorData.inputs[`${sectionId}-result`] = {
+                            label: `${title}: ${resultLabel}`,
+                            value: resultValue
+                        };
+                    }
+
+                    return {
+                        id: sectionId,
+                        title,
+                        fields,
+                        result: resultValue,
+                        resultLabel
+                    };
+                });
+
+                if (flatbarData.length > 0) {
+                    calculatorData.flatbarCalculators = flatbarData;
+                    calculatorData.resultUnit = 'mm';
+
+                    const flatbarResults = flatbarData
+                        .map((item) => ({
+                            title: item.title || 'Výpočet',
+                            label: item.resultLabel || 'Výsledek',
+                            result: item.result && item.result.trim() !== '' ? item.result : '— mm'
+                        }))
+                        .filter((item) => item.title.trim() !== '' || item.result.trim() !== '');
+
+                    if (flatbarResults.length > 0) {
+                        resultLabelText = 'Rozvinuté délky';
+                        resultText = flatbarResults
+                            .map((item) => `${item.title} – ${item.label}: ${item.result}`)
+                            .join('\n');
+                    }
+                }
+            } else {
+                const resultElement = document.getElementById('result-weight');
+                resultText = resultElement && resultElement.textContent ? resultElement.textContent : '';
+            }
 
             const notesElement = document.getElementById('calculator-notes');
             if (notesElement) {
@@ -1195,6 +1314,14 @@ class MaterialCalculatorApp {
                 };
                 calculatorData.materialDensity = materialDensity;
             }
+            if (isFlatbarView && resultText.trim() === '') {
+                resultLabelText = 'Rozvinuté délky';
+                resultText = '— mm';
+            }
+
+            calculatorData.resultLabel = resultLabelText;
+            calculatorData.result = resultText;
+            
 
             const jsonData = JSON.stringify(calculatorData, null, 2);
             const blob = new Blob([jsonData], { type: 'application/json' });
@@ -1208,7 +1335,7 @@ class MaterialCalculatorApp {
             URL.revokeObjectURL(url);
 
             const subject = encodeURIComponent('Výsledky výpočtu z aplikace Kalkulátor hmotnosti materiálů');
-                        const formattedDate = new Date().toLocaleDateString('cs-CZ');
+            const formattedDate = new Date().toLocaleDateString('cs-CZ');
             const inputValues = Object.values(calculatorData.inputs || {})
                 .map((field) => {
                     const label = field && field.label ? String(field.label).trim() : '';
