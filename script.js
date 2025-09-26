@@ -468,6 +468,7 @@ class MaterialCalculatorApp {
             : '';
 
         const inputsHTML = config.inputs.map((input) => this.renderInput(input)).join('');
+        const notesFieldHTML = this.renderNotesField();
         const initialResult = this.formatResult(0, config);
 
         this.container.innerHTML = `
@@ -481,6 +482,7 @@ class MaterialCalculatorApp {
                 <form class="calculator-form" novalidate>
                     ${inputsHTML}
                 </form>
+                ${notesFieldHTML}
                 <div class="calculator-results" role="status" aria-live="polite">
                     <div class="result-item">
                         <label>${config.resultLabel || 'Hmotnost:'}</label>
@@ -516,7 +518,7 @@ class MaterialCalculatorApp {
         const sectionsHTML = calculators.length > 0
             ? calculators.map((calculator) => this.buildFlatBarCalculatorMarkup(calculator)).join('')
             : '<p class="flatbar-empty">Konfigurace kalkulaček se nepodařilo načíst.</p>';
-
+        const notesFieldHTML = this.renderNotesField();
         this.container.innerHTML = `
             <div class="calculator-view calculator-view--flatbar" data-calculator="plochace">
                 <div class="calculator-header">
@@ -524,6 +526,7 @@ class MaterialCalculatorApp {
                     <h2>${config.title}</h2>
                     <button type="button" class="btn btn-danger reset-btn">Resetovat</button>
                 </div>
+                ${notesFieldHTML}
                 <div class="flatbar-content">
                     <div class="flatbar-calculators">
                         ${sectionsHTML}
@@ -708,6 +711,10 @@ class MaterialCalculatorApp {
             return;
         }
 
+         const notesField = this.container.querySelector('#calculator-notes');
+        if (notesField) {
+            notesField.value = '';
+        }
         calculators.forEach((calculator) => {
             const innerDiameterId = this.getFlatBarFieldId(calculator, 'inner-diameter');
             const thicknessId = this.getFlatBarFieldId(calculator, 'sheet-thickness');
@@ -790,6 +797,20 @@ class MaterialCalculatorApp {
                     ${options}
                 </select>
                 <div id="material-density" class="material-density"></div>
+            </section>
+        `;
+    }
+
+        renderNotesField() {
+        return `
+            <section class="calculator-notes">
+                <label for="calculator-notes">Poznámky</label>
+                <textarea
+                    id="calculator-notes"
+                    name="calculator-notes"
+                    rows="4"
+                    placeholder="Zapište si, co právě počítáte, poznámky k zakázce apod."
+                ></textarea>
             </section>
         `;
     }
@@ -959,6 +980,10 @@ class MaterialCalculatorApp {
         form.querySelectorAll('select').forEach((select) => {
             select.selectedIndex = 0;
         });
+        const notesField = this.container.querySelector('#calculator-notes');
+        if (notesField) {
+            notesField.value = '';
+        }
 
         const materialSelect = this.container.querySelector('#material-select');
         if (materialSelect) {
@@ -1075,6 +1100,26 @@ class MaterialCalculatorApp {
                 y += 30;
             });
 
+             const notesElement = document.getElementById('calculator-notes');
+            const notes = notesElement && notesElement.value ? notesElement.value.trim() : '';
+
+            if (notes) {
+                ctx.font = '16px Segoe UI';
+                ctx.fillStyle = '#000000';
+                ctx.fillText('Poznámky:', 24, y);
+                y += 24;
+
+                notes.split(/\r?\n/).forEach((line) => {
+                    if (line.trim() === '') {
+                        y += 22;
+                        return;
+                    }
+
+                    ctx.fillText(line, 24, y);
+                    y += 22;
+                });
+            }
+            
             const resultElement = calculatorView.querySelector('#result-weight');
             const result = resultElement && resultElement.textContent ? resultElement.textContent : '';
             ctx.font = '18px Segoe UI';
@@ -1116,8 +1161,14 @@ class MaterialCalculatorApp {
                 title: config.title,
                 timestamp: new Date().toISOString(),
                 inputs: {},
-                result: resultText
+                result: resultText,
+                notes: ''
             };
+
+            const notesElement = document.getElementById('calculator-notes');
+            if (notesElement) {
+                calculatorData.notes = notesElement.value;
+            }
 
             const form = this.container.querySelector('.calculator-form');
             if (form) {
@@ -1151,6 +1202,9 @@ class MaterialCalculatorApp {
             URL.revokeObjectURL(url);
 
             const subject = encodeURIComponent('Výsledky výpočtu z aplikace Kalkulátor hmotnosti materiálů');
+            const notesText = calculatorData.notes && calculatorData.notes.trim() !== ''
+                ? `\nPoznámky:\n${calculatorData.notes.trim()}\n`
+                : '';
             const body = encodeURIComponent(`Dobrý den,
 
 přikládám výsledky výpočtu z aplikace Kalkulátor hmotnosti materiálů.
@@ -1158,7 +1212,7 @@ přikládám výsledky výpočtu z aplikace Kalkulátor hmotnosti materiálů.
 Typ výpočtu: ${config.title}
 Výsledek: ${calculatorData.result}
 Datum: ${new Date().toLocaleDateString('cs-CZ')}
-
+${notesText}
 S pozdravem`);
 
             window.location.href = `mailto:?subject=${subject}&body=${body}`;
