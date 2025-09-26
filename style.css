@@ -75,8 +75,8 @@ body.home-background::after {
 }
 
 .home-logo {
-    --logo-max-width: min(90vw, 1200px);
-    --logo-max-height: clamp(240px, 52vw, 520px);
+    --logo-max-width: min(90vw, 600px);
+    --logo-max-height: clamp(120px, 26vw, 260px);
     margin: 0;
     display: flex;
     align-items: center;
@@ -103,15 +103,15 @@ body.home-background::after {
 
 @media (max-width: 600px) {
     .home-logo {
-        --logo-max-width: min(92vw, 520px);
-        --logo-max-height: clamp(180px, 48vw, 320px);
+        --logo-max-width: min(92vw, 260px);
+        --logo-max-height: clamp(90px, 24vw, 160px);
     }
 }
 
 @media (min-width: 1024px) {
     .home-logo {
-        --logo-max-width: min(90vw, 1600px);
-        --logo-max-height: clamp(360px, 45vw, 720px);
+        --logo-max-width: min(90vw, 800px);
+        --logo-max-height: clamp(180px, 22.5vw, 360px);
     }
 }
 
