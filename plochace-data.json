@@ -1,0 +1,38 @@
+{
+  "title": "Výpočet rozvinuté délky plocháčů",
+  "description": "Zadejte vnitřní průměr a sílu plechu pro automatické dopočítání rozvinuté délky. Údaje jsou uvedeny v milimetrech.",
+  "calculators": [
+    {
+      "id": "flatbar-under-40",
+      "title": "Plechy do tloušťky 40 mm",
+      "description": "Standardní výpočet pro plechy s tloušťkou do 40 mm.",
+      "diameterLabel": "Vnitřní průměr (mm)",
+      "thicknessLabel": "Síla plechu (mm)",
+      "resultLabel": "Rozvinutá délka",
+      "resultUnit": "mm",
+      "piFactor": 3.14,
+      "thicknessMultiplier": 3,
+      "adjustment": -5,
+      "innerDiameterMin": 0,
+      "thicknessMin": 0,
+      "innerDiameterStep": 0.01,
+      "thicknessStep": 0.01
+    },
+    {
+      "id": "flatbar-over-40",
+      "title": "Plechy nad 40 mm a ETZ",
+      "description": "Použijte pro plechy s tloušťkou nad 40 mm a pro ETZ.",
+      "diameterLabel": "Vnitřní průměr (mm)",
+      "thicknessLabel": "Síla plechu (mm)",
+      "resultLabel": "Rozvinutá délka",
+      "resultUnit": "mm",
+      "piFactor": 3.14,
+      "thicknessMultiplier": 3,
+      "adjustment": -35,
+      "innerDiameterMin": 0,
+      "thicknessMin": 0,
+      "innerDiameterStep": 0.01,
+      "thicknessStep": 0.01
+    }
+  ]
+}

@@ -229,19 +229,8 @@ const CALCULATORS = {
     },
     'plochace': {
         title: 'Plocháče',
-        customRender: (app, config) => app.renderFlatBarLengthCalculators(config),
-        calculators: [
-            {
-                id: 'flatbar-under-40',
-                title: 'Výpočet rozvinuté délky pro plechy do tl. 40 mm',
-                adjustment: -5
-            },
-            {
-                id: 'flatbar-over-40',
-                title: 'Výpočet rozvinuté délky pro plechy nad tl. 40 mm a ETZ',
-                adjustment: -35
-            }
-        ]
+        dataSource: 'plochace-data.json',
+        customRender: async (app, config) => app.renderFlatBarCalculatorsFromData(config)
     },
     'profil-iu': {
         title: 'Profil I+U',
@@ -343,6 +332,7 @@ class MaterialCalculatorApp {
         this.container = document.getElementById('app-container');
         this.currentView = 'home';
         this.profileData = null;
+        this.flatbarConfigCache = new Map();
 
         this.calculate = this.calculate.bind(this);
         this.resetCalculator = this.resetCalculator.bind(this);
@@ -509,12 +499,127 @@ class MaterialCalculatorApp {
         this.attachCalculatorEvents(config);
     }
 
+    async renderFlatBarCalculatorsFromData(config) {
+        if (!this.container) {
+            return;
+        }
+
+        const title = config && typeof config.title === 'string' ? config.title : 'Plocháče';
+        this.renderFlatbarStateView(title, 'Načítání konfigurace…', { stateClass: 'is-loading' });
+
+        try {
+            const data = await this.loadFlatbarConfig(config ? config.dataSource : null);
+            const calculators = data.calculators;
+
+            if (!Array.isArray(calculators) || calculators.length === 0) {
+                this.renderFlatbarStateView(title, 'Konfiguraci kalkulaček se nepodařilo načíst.', {
+                    stateClass: 'is-error',
+                    onRetry: () => this.renderFlatBarCalculatorsFromData(config)
+                });
+                return;
+            }
+
+            this.renderFlatBarLengthCalculators({
+                ...config,
+                title: data.title || title,
+                description: data.description,
+                calculators
+            });
+        } catch (error) {
+            console.error('Nepodařilo se načíst konfiguraci plocháčů:', error);
+            this.renderFlatbarStateView(title, 'Nepodařilo se načíst konfiguraci plocháčů.', {
+                stateClass: 'is-error',
+                onRetry: () => this.renderFlatBarCalculatorsFromData(config)
+            });
+        }
+    }
+
+    async loadFlatbarConfig(source) {
+        const cacheKey = typeof source === 'string' && source.trim() !== '' ? source.trim() : null;
+        if (cacheKey && this.flatbarConfigCache.has(cacheKey)) {
+            return this.flatbarConfigCache.get(cacheKey);
+        }
+
+        if (!cacheKey) {
+            const emptyConfig = { title: '', description: '', calculators: [] };
+            return emptyConfig;
+        }
+
+        const response = await fetch(cacheKey, { cache: 'no-cache' });
+        if (!response.ok) {
+            throw new Error(`HTTP ${response.status} ${response.statusText}`);
+        }
+
+        const data = await response.json();
+        const normalized = this.normalizeFlatbarConfig(data);
+        this.flatbarConfigCache.set(cacheKey, normalized);
+        return normalized;
+    }
+
+    normalizeFlatbarConfig(data) {
+        if (!data) {
+            return { title: '', description: '', calculators: [] };
+        }
+
+        const calculators = Array.isArray(data.calculators)
+            ? data.calculators
+            : Array.isArray(data.sections)
+                ? data.sections
+                : Array.isArray(data)
+                    ? data
+                    : [];
+
+        return {
+            title: typeof data.title === 'string' ? data.title : '',
+            description: typeof data.description === 'string' ? data.description : '',
+            calculators
+        };
+    }
+
+    renderFlatbarStateView(title, message, options = {}) {
+        if (!this.container) {
+            return;
+        }
+
+        const { stateClass = '', onRetry = null } = options;
+        const retryButtonHTML = typeof onRetry === 'function'
+            ? `<button type="button" class="btn btn-primary retry-btn">Zkusit znovu</button>`
+            : '';
+
+        this.container.innerHTML = `
+            <div class="calculator-view calculator-view--flatbar" data-calculator="plochace">
+                <div class="calculator-header">
+                    <button type="button" class="btn btn-secondary back-btn">← Zpět</button>
+                    <h2>${title}</h2>
+                    <button type="button" class="btn btn-danger reset-btn" disabled>Resetovat</button>
+                </div>
+                <div class="flatbar-state ${stateClass}" role="status">
+                    <p>${message}</p>
+                    ${retryButtonHTML}
+                </div>
+            </div>
+        `;
+
+        const backButton = this.container.querySelector('.back-btn');
+        if (backButton) {
+            backButton.addEventListener('click', () => this.loadView('home'));
+        }
+
+        const retryButton = this.container.querySelector('.retry-btn');
+        if (retryButton && typeof onRetry === 'function') {
+            retryButton.addEventListener('click', () => onRetry());
+        }
+    }
+
     renderFlatBarLengthCalculators(config) {
         if (!this.container) {
             return;
         }
 
         const calculators = Array.isArray(config.calculators) ? config.calculators : [];
+        const description = typeof config.description === 'string' && config.description.trim() !== ''
+            ? `<p class="flatbar-description">${config.description}</p>`
+            : '';
         const sectionsHTML = calculators.length > 0
             ? calculators.map((calculator) => this.buildFlatBarCalculatorMarkup(calculator)).join('')
             : '<p class="flatbar-empty">Konfigurace kalkulaček se nepodařilo načíst.</p>';
@@ -528,6 +633,7 @@ class MaterialCalculatorApp {
                 </div>
                 ${notesFieldHTML}
                 <div class="flatbar-content">
+                    ${description}
                     <div class="flatbar-calculators">
                         ${sectionsHTML}
                     </div>
@@ -591,45 +697,71 @@ class MaterialCalculatorApp {
         const innerDiameterId = this.getFlatBarFieldId(calculator, 'inner-diameter');
         const thicknessId = this.getFlatBarFieldId(calculator, 'sheet-thickness');
         const resultId = this.getFlatBarFieldId(calculator, 'result');
+        const diameterLabel = typeof calculator.diameterLabel === 'string'
+            ? calculator.diameterLabel
+            : 'Vnitřní průměr (mm)';
+        const thicknessLabel = typeof calculator.thicknessLabel === 'string'
+            ? calculator.thicknessLabel
+            : 'Síla plechu (mm)';
+        const diameterPlaceholder = typeof calculator.diameterPlaceholder === 'string'
+            ? calculator.diameterPlaceholder
+            : 'Zadejte hodnotu';
+        const thicknessPlaceholder = typeof calculator.thicknessPlaceholder === 'string'
+            ? calculator.thicknessPlaceholder
+            : 'Zadejte hodnotu';
+        const resultLabel = typeof calculator.resultLabel === 'string'
+            ? calculator.resultLabel
+            : 'Rozvinutá délka';
+        const resultUnit = typeof calculator.resultUnit === 'string' && calculator.resultUnit.trim() !== ''
+            ? calculator.resultUnit.trim()
+            : 'mm';
+        const description = typeof calculator.description === 'string' && calculator.description.trim() !== ''
+            ? `<p class="flatbar-calculator__description">${calculator.description}</p>`
+            : '';
+        const diameterStep = this.getFlatbarNumericAttribute(calculator.innerDiameterStep, 0.01);
+        const thicknessStep = this.getFlatbarNumericAttribute(calculator.thicknessStep, 0.01);
+        const diameterMin = this.getFlatbarNumericAttribute(calculator.innerDiameterMin, 0);
+        const thicknessMin = this.getFlatbarNumericAttribute(calculator.thicknessMin, 0);
 
         return `
             <section class="flatbar-calculator" data-flatbar="${calculator.id}">
                 <header class="flatbar-calculator__header">
                     <h3>${calculator.title}</h3>
+                    ${description}
                 </header>
                 <div class="flatbar-calculator__body">
                     <div class="flatbar-field">
-                        <label class="flatbar-field__label" for="${innerDiameterId}">Vnitřní průměr (mm)</label>
+                        <label class="flatbar-field__label" for="${innerDiameterId}">${diameterLabel}</label>
                         <input
                             id="${innerDiameterId}"
                             name="${innerDiameterId}"
                             class="flatbar-field__input"
                             type="number"
                             inputmode="decimal"
-                            min="0"
-                            step="0.01"
+                            min="${diameterMin}"
+                            step="${diameterStep}"
                             autocomplete="off"
-                            placeholder="Zadejte hodnotu"
+                            placeholder="${diameterPlaceholder}"
                         />
                     </div>
                     <div class="flatbar-field">
-                        <label class="flatbar-field__label" for="${thicknessId}">Síla plechu (mm)</label>
+                        <label class="flatbar-field__label" for="${thicknessId}">${thicknessLabel}</label>
                         <input
                             id="${thicknessId}"
                             name="${thicknessId}"
                             class="flatbar-field__input"
                             type="number"
                             inputmode="decimal"
-                            min="0"
-                            step="0.01"
+                            min="${thicknessMin}"
+                            step="${thicknessStep}"
                             autocomplete="off"
-                            placeholder="Zadejte hodnotu"
+                            placeholder="${thicknessPlaceholder}"
                         />
                     </div>
                 </div>
                 <footer class="flatbar-calculator__result flatbar-result-card" role="status" aria-live="polite">
-                    <span class="flatbar-result-label">Rozvinutá délka</span>
-                    <span id="${resultId}" class="flatbar-result-value">— mm</span>
+                    <span class="flatbar-result-label">${resultLabel}</span>
+                    <span id="${resultId}" class="flatbar-result-value">— ${resultUnit}</span>
                 </footer>
             </section>
         `;
@@ -655,7 +787,10 @@ class MaterialCalculatorApp {
                 return;
             }
 
-            const pendingText = '— mm';
+            const resultUnit = typeof calculator.resultUnit === 'string' && calculator.resultUnit.trim() !== ''
+                ? calculator.resultUnit.trim()
+                : 'mm';
+            const pendingText = `— ${resultUnit}`;
             resultElement.textContent = pendingText;
             resultElement.dataset.pending = 'true';
 
@@ -669,7 +804,7 @@ class MaterialCalculatorApp {
                 const thicknessRaw = thicknessInput.value;
 
                 if (!this.hasInputValue(diameterRaw) || !this.hasInputValue(thicknessRaw)) {
-                    resultElement.textContent = '0 mm';
+                    resultElement.textContent = `0 ${resultUnit}`;
                     resultElement.dataset.pending = 'false';
                     return;
                 }
@@ -678,26 +813,46 @@ class MaterialCalculatorApp {
                 const thicknessValue = this.parseDecimalValue(thicknessRaw);
 
                 if (!Number.isFinite(diameterValue) || !Number.isFinite(thicknessValue)) {
-                    resultElement.textContent = '0 mm';
+                    resultElement.textContent = `0 ${resultUnit}`;
                     resultElement.dataset.pending = 'false';
                     return;
                 }
 
-                const adjustmentValue = Number.parseFloat(calculator.adjustment);
-                const adjustment = Number.isFinite(adjustmentValue) ? adjustmentValue : 0;
-                const computed = (diameterValue * FLATBAR_LENGTH_PI) + (3 * thicknessValue) + adjustment;
-                const rounded = Math.round(computed);
+                const piFactor = this.getFlatbarNumber(calculator.piFactor, FLATBAR_LENGTH_PI);
+                const thicknessMultiplier = this.getFlatbarNumber(calculator.thicknessMultiplier, 3);
+                const adjustment = this.getFlatbarNumber(calculator.adjustment, 0);
+                const decimals = Math.max(0, this.getFlatbarInteger(calculator.decimals, 0));
+                const roundingMode = typeof calculator.rounding === 'string'
+                    ? calculator.rounding.toLowerCase()
+                    : 'round';
+                const roundingFunction = roundingMode === 'floor'
+                    ? Math.floor
+                    : roundingMode === 'ceil'
+                        ? Math.ceil
+                        : Math.round;
+
+                const computed = (diameterValue * piFactor) + (thicknessValue * thicknessMultiplier) + adjustment;
+                const factor = 10 ** decimals;
+                const rounded = Number.isFinite(computed)
+                    ? roundingFunction(computed * factor) / factor
+                    : Number.NaN;
                 const formatted = Number.isFinite(rounded)
-                    ? new Intl.NumberFormat('cs-CZ').format(rounded)
+                    ? new Intl.NumberFormat('cs-CZ', {
+                        minimumFractionDigits: decimals,
+                        maximumFractionDigits: decimals
+                    }).format(rounded)
                     : '0';
 
-                resultElement.textContent = `${formatted} mm`;
+                resultElement.textContent = `${formatted} ${resultUnit}`;
                 resultElement.dataset.pending = 'false';
             };
 
+            const autoCalculate = calculator.autoCalculate === true || calculator.calculateOnInput === true;
+            const inputHandler = autoCalculate ? computeLength : markPending;
+
             ['input', 'change'].forEach((eventName) => {
-                diameterInput.addEventListener(eventName, markPending);
-                thicknessInput.addEventListener(eventName, markPending);
+                diameterInput.addEventListener(eventName, inputHandler);
+                thicknessInput.addEventListener(eventName, inputHandler);
             });
 
             recalculateCallbacks.push(computeLength);
@@ -710,10 +865,12 @@ class MaterialCalculatorApp {
         if (!Array.isArray(calculators)) {
             return;
         }
-const notesField = this.container.querySelector('#calculator-notes');
+
+        const notesField = this.container ? this.container.querySelector('#calculator-notes') : null;
         if (notesField) {
             notesField.value = '';
         }
+
         calculators.forEach((calculator) => {
             const innerDiameterId = this.getFlatBarFieldId(calculator, 'inner-diameter');
             const thicknessId = this.getFlatBarFieldId(calculator, 'sheet-thickness');
@@ -734,10 +891,68 @@ const notesField = this.container.querySelector('#calculator-notes');
             }
 
             if (resultElement) {
-                resultElement.textContent = '— mm';
+                const resultUnit = typeof calculator.resultUnit === 'string' && calculator.resultUnit.trim() !== ''
+                    ? calculator.resultUnit.trim()
+                    : 'mm';
+                resultElement.textContent = `— ${resultUnit}`;
                 resultElement.dataset.pending = 'true';
             }
         });
+    }
+
+    getFlatbarNumericAttribute(value, fallback) {
+        const resolvedFallback = typeof fallback === 'number' ? fallback : 0;
+        if (typeof value === 'number' && Number.isFinite(value)) {
+            return value.toString();
+        }
+
+        if (typeof value === 'string') {
+            const normalized = value.trim().replace(',', '.');
+            if (normalized !== '') {
+                const parsed = Number.parseFloat(normalized);
+                if (Number.isFinite(parsed)) {
+                    return parsed.toString();
+                }
+            }
+        }
+
+        return resolvedFallback.toString();
+    }
+
+    getFlatbarNumber(value, fallback = 0) {
+        if (typeof value === 'number' && Number.isFinite(value)) {
+            return value;
+        }
+
+        if (typeof value === 'string') {
+            const normalized = value.trim().replace(',', '.');
+            if (normalized !== '') {
+                const parsed = Number.parseFloat(normalized);
+                if (Number.isFinite(parsed)) {
+                    return parsed;
+                }
+            }
+        }
+
+        return fallback;
+    }
+
+    getFlatbarInteger(value, fallback = 0) {
+        if (Number.isInteger(value)) {
+            return value;
+        }
+
+        if (typeof value === 'string') {
+            const normalized = value.trim();
+            if (normalized !== '') {
+                const parsed = Number.parseInt(normalized, 10);
+                if (Number.isFinite(parsed)) {
+                    return parsed;
+                }
+            }
+        }
+
+        return fallback;
     }
 
     parseDecimalValue(value) {
