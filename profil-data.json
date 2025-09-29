@@ -48,6 +48,7 @@
     {"Typ": "U", "Rozmer": 60, "Hmotnost_m": 5.07},
     {"Typ": "U", "Rozmer": 65, "Hmotnost_m": 7.09},
     {"Typ": "U", "Rozmer": 80, "Hmotnost_m": 8.64},
+
     {"Typ": "U", "Rozmer": 100, "Hmotnost_m": 10.60},
     {"Typ": "U", "Rozmer": 120, "Hmotnost_m": 13.40},
     {"Typ": "U", "Rozmer": 140, "Hmotnost_m": 16.00},

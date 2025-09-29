@@ -1356,11 +1356,18 @@ class MaterialCalculatorApp {
                 maximumFractionDigits: 0
             });
 
+
             const rowsHTML = sortedProfiles.map((profile, index) => {
                 const type = profile && typeof profile.Typ === 'string' ? profile.Typ.trim() : '';
                 const dimensionValue = Number(profile && profile.Rozmer);
                 const weightValue = Number(profile && profile.Hmotnost_m);
                 const rowNumber = index + 1;
+
+            const rowsHTML = sortedProfiles.map((profile) => {
+                const type = profile && typeof profile.Typ === 'string' ? profile.Typ.trim() : '';
+                const dimensionValue = Number(profile && profile.Rozmer);
+                const weightValue = Number(profile && profile.Hmotnost_m);
+
                 const dimensionText = Number.isFinite(dimensionValue)
                     ? dimensionFormatter.format(dimensionValue)
                     : '–';
@@ -1370,7 +1377,9 @@ class MaterialCalculatorApp {
 
                 return `
                     <tr>
+
                         <td data-label="Pořadí" class="profile-database-index">${rowNumber}</td>
+
                         <td data-label="Typ">${this.escapeHTML(type)}</td>
                         <td data-label="Rozměr [mm]">${this.escapeHTML(dimensionText)}</td>
                         <td data-label="Hmotnost [kg/m]">${this.escapeHTML(weightText)}</td>
@@ -1383,7 +1392,10 @@ class MaterialCalculatorApp {
                     <caption class="visually-hidden">Kompletní databáze profilů I a U</caption>
                     <thead>
                         <tr>
+
                             <th scope="col" class="profile-database-col-index">Pořadí</th>
+
+
                             <th scope="col">Typ</th>
                             <th scope="col">Rozměr [mm]</th>
                             <th scope="col">Hmotnost [kg/m]</th>
