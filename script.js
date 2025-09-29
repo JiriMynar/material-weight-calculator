@@ -247,7 +247,7 @@ const CALCULATORS = {
         title: 'Profil I+U',
         resultLabel: 'Hmotnost:',
         resultUnit: 'kg',
-        showMaterialSelector: true,
+        showMaterialSelector: false,
         inputs: [
             {
                 id: 'profile-type',
@@ -1305,14 +1305,23 @@ const notesField = this.container.querySelector('#calculator-notes');
             }
 
             const materialSelect = document.getElementById('material-select');
+            let materialLabelText = '';
+            let materialDensityText = '';
+            let includeMaterialInfo = false;
             if (materialSelect) {
                 const materialValue = materialSelect.value;
                 const materialDensity = MATERIAL_DENSITIES[materialValue];
+                const materialLabel = MATERIAL_LABELS[materialValue] || materialValue;
                 calculatorData.material = {
                     value: materialValue,
-                    label: MATERIAL_LABELS[materialValue] || materialValue
+                    label: materialLabel
                 };
                 calculatorData.materialDensity = materialDensity;
+                materialLabelText = materialLabel;
+                materialDensityText = typeof materialDensity === 'number'
+                    ? `${new Intl.NumberFormat('cs-CZ').format(materialDensity)} kg/m³`
+                    : '(neuvedeno)';
+                includeMaterialInfo = config.showMaterialSelector !== false;
             }
             if (isFlatbarView && resultText.trim() === '') {
                 resultLabelText = 'Rozvinuté délky';
@@ -1368,16 +1377,21 @@ const notesField = this.container.querySelector('#calculator-notes');
                 `Datum: ${formattedDate}`,
                 '',
                 'Naměřené hodnoty:',
-                inputValues.length > 0 ? inputValues.join('\n') : '(neuvedeno)',
-                '',
-                `Materiál: ${materialLabel}`,
-                `Hustota materiálu: ${materialDensity}`,
-                '',
-                'Poznámky:',
-                notesText,
-                '',
-                'S pozdravem'
+                inputValues.length > 0 ? inputValues.join('\n') : '(neuvedeno)'
             ];
+
+                        if (includeMaterialInfo) {
+                bodyLines.push('');
+                bodyLines.push(`Materiál: ${materialLabelText}`);
+                bodyLines.push(`Hustota materiálu: ${materialDensityText}`);
+            }
+
+            bodyLines.push('');
+            bodyLines.push('Poznámky:');
+            bodyLines.push(notesText);
+            bodyLines.push('');
+            bodyLines.push('S pozdravem');
+
 
             const body = encodeURIComponent(bodyLines.join('\n'));
 
