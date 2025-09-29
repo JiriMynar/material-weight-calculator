@@ -242,7 +242,7 @@ const CALCULATORS = {
                 id: 'profile-type',
                 label: 'Typ profilu',
                 type: 'select',
-                options: ['HEA', 'HEA-S', 'IPE', 'IPE-S', 'U', 'U-S']
+                options: []
             },
             { id: 'profile-height', label: 'Výška H [mm]', type: 'number' },
             { id: 'length', label: 'Délka L [mm]', type: 'number' }
@@ -497,6 +497,12 @@ class MaterialCalculatorApp {
         `;
 
         this.attachCalculatorEvents(config);
+
+        if (type === 'profil-iu') {
+            this.populateProfileTypeOptions().catch((error) => {
+                console.error('Nepodařilo se připravit nabídku typů profilů:', error);
+            });
+        }
     }
 
     async renderFlatBarCalculatorsFromData(config) {
@@ -1276,6 +1282,54 @@ class MaterialCalculatorApp {
         } catch (error) {
             console.error('Chyba při načítání dat profilů:', error);
             return [];
+        }
+    }
+
+    async getAvailableProfileTypes() {
+        const profiles = await this.loadProfileData();
+        if (!Array.isArray(profiles) || profiles.length === 0) {
+            return [];
+        }
+
+        const typeSet = new Set();
+        profiles.forEach((profile) => {
+            if (profile && typeof profile.Typ === 'string') {
+                const trimmed = profile.Typ.trim();
+                if (trimmed !== '') {
+                    typeSet.add(trimmed);
+                }
+            }
+        });
+
+        return Array.from(typeSet).sort((a, b) => a.localeCompare(b, 'cs'));
+    }
+
+    async populateProfileTypeOptions() {
+        const select = this.container ? this.container.querySelector('#profile-type') : null;
+        if (!select) {
+            return;
+        }
+
+        const placeholderOption = '<option value="">Vyberte...</option>';
+        select.innerHTML = `${placeholderOption}<option value="" disabled>Načítání…</option>`;
+
+        try {
+            const types = await this.getAvailableProfileTypes();
+
+            if (this.currentView !== 'profil-iu') {
+                return;
+            }
+
+            if (!Array.isArray(types) || types.length === 0) {
+                select.innerHTML = `${placeholderOption}<option value="" disabled>Data nejsou k dispozici</option>`;
+                return;
+            }
+
+            const optionsHTML = types.map((type) => `<option value="${type}">${type}</option>`).join('');
+            select.innerHTML = `${placeholderOption}${optionsHTML}`;
+        } catch (error) {
+            select.innerHTML = `${placeholderOption}<option value="" disabled>Nepodařilo se načíst</option>`;
+            throw error;
         }
     }
 
