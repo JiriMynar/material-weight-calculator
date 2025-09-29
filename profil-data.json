@@ -48,14 +48,4 @@
     {"Typ": "U", "Rozmer": 60, "Hmotnost_m": 5.07},
     {"Typ": "U", "Rozmer": 65, "Hmotnost_m": 7.09},
     {"Typ": "U", "Rozmer": 80, "Hmotnost_m": 8.64},
-    {"Typ": "U", "Rozmer": 100, "Hmotnost_m": 10.60},
-    {"Typ": "U", "Rozmer": 120, "Hmotnost_m": 13.40},
-    {"Typ": "U", "Rozmer": 140, "Hmotnost_m": 16.00},
-    {"Typ": "U", "Rozmer": 160, "Hmotnost_m": 18.80},
-    {"Typ": "U", "Rozmer": 180, "Hmotnost_m": 22.50},
-    {"Typ": "U", "Rozmer": 200, "Hmotnost_m": 25.30},
-    {"Typ": "U", "Rozmer": 220, "Hmotnost_m": 29.36},
-    {"Typ": "U", "Rozmer": 260, "Hmotnost_m": 37.90},
-    {"Typ": "U", "Rozmer": 280, "Hmotnost_m": 41.80},
-    {"Typ": "U", "Rozmer": 300, "Hmotnost_m": 46.20}
 ]
