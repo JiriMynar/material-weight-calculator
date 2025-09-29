@@ -24,6 +24,18 @@
     box-sizing: border-box;
 }
 
+.visually-hidden {
+    position: absolute;
+    width: 1px;
+    height: 1px;
+    padding: 0;
+    margin: -1px;
+    overflow: hidden;
+    clip: rect(0, 0, 0, 0);
+    white-space: nowrap;
+    border: 0;
+}
+
 body {
     font-family: 'Segoe UI', 'Inter', 'Roboto', sans-serif;
     background: radial-gradient(circle at top, rgba(166, 206, 57, 0.12), transparent 55%) no-repeat,
@@ -250,6 +262,12 @@ main {
     font-size: 1.7rem;
     font-weight: 700;
     text-align: center;
+}
+
+.calculator-header-actions {
+    display: inline-flex;
+    align-items: center;
+    gap: 0.75rem;
 }
 
 .btn {
@@ -493,6 +511,134 @@ main {
     width: 100%;
 }
 
+.profile-database-overlay {
+    position: fixed;
+    inset: 0;
+    background: rgba(28, 29, 33, 0.65);
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    padding: clamp(1rem, 4vw, 2.4rem);
+    z-index: 999;
+    opacity: 0;
+    pointer-events: none;
+    transition: opacity 0.25s ease;
+}
+
+.profile-database-overlay.is-visible {
+    opacity: 1;
+    pointer-events: auto;
+}
+
+.profile-database-overlay[hidden] {
+    display: none;
+}
+
+.profile-database-dialog {
+    background: #ffffff;
+    border-radius: var(--radius-large);
+    width: min(960px, 100%);
+    max-height: min(90vh, 720px);
+    padding: clamp(1.5rem, 3vw, 2rem);
+    box-shadow: var(--shadow-card);
+    display: flex;
+    flex-direction: column;
+    gap: 1rem;
+    outline: none;
+}
+
+.profile-database-header {
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+    gap: 1rem;
+}
+
+.profile-database-header h3 {
+    font-size: 1.45rem;
+    font-weight: 700;
+    color: var(--color-text);
+}
+
+.profile-database-description {
+    margin: 0;
+    color: var(--color-muted);
+    font-size: 0.98rem;
+    line-height: 1.5;
+}
+
+.profile-database-body {
+    flex: 1;
+    display: flex;
+    min-height: 0;
+}
+
+.profile-database-table {
+    flex: 1;
+    border-radius: var(--radius-medium);
+    border: 1px solid rgba(166, 206, 57, 0.28);
+    overflow: auto;
+    background: rgba(255, 255, 255, 0.98);
+    box-shadow: inset 0 1px 0 rgba(255, 255, 255, 0.45);
+}
+
+.profile-database-table table {
+    width: 100%;
+    border-collapse: collapse;
+    min-width: 100%;
+}
+
+.profile-database-table thead th {
+    position: sticky;
+    top: 0;
+    background: linear-gradient(180deg, rgba(166, 206, 57, 0.18) 0%, rgba(166, 206, 57, 0.08) 100%);
+    color: var(--color-text);
+    font-size: 0.95rem;
+    text-transform: uppercase;
+    letter-spacing: 0.02em;
+}
+
+.profile-database-table .profile-database-col-index,
+.profile-database-table .profile-database-index {
+    width: 1%;
+    text-align: right;
+    font-variant-numeric: tabular-nums;
+    color: var(--color-muted);
+}
+
+.profile-database-table .profile-database-col-index {
+    min-width: 3.5rem;
+}
+
+.profile-database-table th,
+.profile-database-table td {
+    padding: 0.75rem 1.1rem;
+    font-size: 0.96rem;
+    border-bottom: 1px solid rgba(166, 206, 57, 0.18);
+    white-space: nowrap;
+}
+
+.profile-database-table th:not(.profile-database-col-index),
+.profile-database-table td:not(.profile-database-index) {
+    text-align: left;
+}
+
+.profile-database-table tbody tr:nth-child(even) {
+    background: rgba(166, 206, 57, 0.06);
+}
+
+.profile-database-table tbody tr:last-child td {
+    border-bottom: none;
+}
+
+.profile-database-status {
+    margin: 0;
+    padding: 1.2rem 1.4rem;
+    text-align: center;
+    font-size: 1rem;
+    color: var(--color-muted);
+}
+
 .calculator-view--flatbar .flatbar-content {
     display: flex;
     flex-direction: column;
@@ -685,6 +831,12 @@ main {
         order: -1;
     }
 
+    .calculator-header-actions {
+        width: 100%;
+        justify-content: center;
+        flex-direction: column;
+    }
+
     .calculator-header .btn {
         width: 100%;
     }
@@ -750,6 +902,36 @@ main {
 
     .flatbar-field {
         padding: 1rem 1.1rem;
+    }
+
+    .profile-database-overlay {
+        align-items: stretch;
+        padding: 0;
+    }
+
+    .profile-database-dialog {
+        width: 100%;
+        height: 100%;
+        max-height: none;
+        border-radius: 0;
+        padding: 1.4rem 1rem 1.6rem;
+    }
+
+    .profile-database-header {
+        flex-direction: column;
+        align-items: flex-start;
+        gap: 0.75rem;
+    }
+
+    .profile-database-header .btn {
+        width: 100%;
+    }
+
+    .profile-database-table th,
+    .profile-database-table td {
+        white-space: normal;
+        font-size: 0.92rem;
+        padding: 0.7rem 0.9rem;
     }
 }
 

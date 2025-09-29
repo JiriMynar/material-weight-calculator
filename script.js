@@ -333,11 +333,15 @@ class MaterialCalculatorApp {
         this.currentView = 'home';
         this.profileData = null;
         this.flatbarConfigCache = new Map();
+        this.profileDatabaseLastFocus = null;
+        this.profileDatabaseHideTimeout = null;
+        this.bodyOriginalOverflow = '';
 
         this.calculate = this.calculate.bind(this);
         this.resetCalculator = this.resetCalculator.bind(this);
         this.takeScreenshot = this.takeScreenshot.bind(this);
         this.exportToEmail = this.exportToEmail.bind(this);
+        this.handleProfileDatabaseKeydown = this.handleProfileDatabaseKeydown.bind(this);
 
         this.setupRouter();
         this.loadInitialView();
@@ -374,6 +378,8 @@ class MaterialCalculatorApp {
         if (!this.container) {
             return;
         }
+
+        this.resetProfileDatabaseOverlayState();
 
         if (viewName === 'home') {
             this.renderHome();
@@ -441,6 +447,8 @@ class MaterialCalculatorApp {
             document.body.classList.remove('home-background');
         }
 
+        this.resetProfileDatabaseOverlayState();
+
         const config = CALCULATORS[type];
 
         if (!config) {
@@ -460,13 +468,33 @@ class MaterialCalculatorApp {
         const inputsHTML = config.inputs.map((input) => this.renderInput(input)).join('');
         const notesFieldHTML = this.renderNotesField();
         const initialResult = this.formatResult(0, config);
+        const profileDatabaseButtonHTML = type === 'profil-iu'
+            ? `
+                <button
+                    type="button"
+                    class="btn btn-secondary profile-database-btn"
+                    aria-haspopup="dialog"
+                    aria-controls="profile-database-overlay"
+                    aria-expanded="false"
+                >
+                    <span class="btn-icon" aria-hidden="true">ℹ️</span>
+                    <span>Databáze profilů</span>
+                </button>
+            `
+            : '';
+        const profileDatabaseOverlayHTML = type === 'profil-iu'
+            ? this.renderProfileDatabaseOverlay()
+            : '';
 
         this.container.innerHTML = `
             <div class="calculator-view" data-calculator="${type}">
                 <div class="calculator-header">
                     <button type="button" class="btn btn-secondary back-btn">← Zpět</button>
                     <h2>${config.title}</h2>
-                    <button type="button" class="btn btn-danger reset-btn">Resetovat</button>
+                    <div class="calculator-header-actions">
+                        ${profileDatabaseButtonHTML}
+                        <button type="button" class="btn btn-danger reset-btn">Resetovat</button>
+                    </div>
                 </div>
                 ${materialSelectorHTML}
                 <form class="calculator-form" novalidate>
@@ -493,6 +521,7 @@ class MaterialCalculatorApp {
                         <span>Uložit do e-mailu</span>
                     </button>
                 </div>
+                ${profileDatabaseOverlayHTML}
             </div>
         `;
 
@@ -503,6 +532,35 @@ class MaterialCalculatorApp {
                 console.error('Nepodařilo se připravit nabídku typů profilů:', error);
             });
         }
+    }
+
+    renderProfileDatabaseOverlay() {
+        return `
+            <div class="profile-database-overlay" id="profile-database-overlay" hidden>
+                <div
+                    class="profile-database-dialog"
+                    role="dialog"
+                    aria-modal="true"
+                    aria-labelledby="profile-database-title"
+                    aria-describedby="profile-database-description"
+                    tabindex="-1"
+                >
+                    <div class="profile-database-header">
+                        <h3 id="profile-database-title">Databáze profilů I a U</h3>
+                        <button type="button" class="btn btn-secondary profile-database-close">
+                            <span class="btn-icon" aria-hidden="true">✖️</span>
+                            <span>Zavřít</span>
+                        </button>
+                    </div>
+                    <p id="profile-database-description" class="profile-database-description">
+                        Kompletní přehled typů, rozměrů a hmotností na metr z interní databáze profilů.
+                    </p>
+                    <div class="profile-database-body">
+                        <div class="profile-database-table" role="region" aria-live="polite" aria-busy="false"></div>
+                    </div>
+                </div>
+            </div>
+        `;
     }
 
     async renderFlatBarCalculatorsFromData(config) {
@@ -1113,6 +1171,10 @@ class MaterialCalculatorApp {
                 this.updateMaterialDensity(materialSelect.value || DEFAULT_MATERIAL, false);
             }
         }
+
+        if (this.currentView === 'profil-iu') {
+            this.setupProfileDatabaseEvents();
+        }
     }
 
     readNumber(id) {
@@ -1128,7 +1190,253 @@ class MaterialCalculatorApp {
 
     readValue(id) {
         const element = document.getElementById(id);
-        return element ? element.value : '';
+        if (!element) {
+            return '';
+        }
+
+        return element.value || '';
+    }
+
+    escapeHTML(value) {
+        return String(value)
+            .replace(/&/g, '&amp;')
+            .replace(/</g, '&lt;')
+            .replace(/>/g, '&gt;')
+            .replace(/"/g, '&quot;')
+            .replace(/'/g, '&#39;');
+    }
+
+    setupProfileDatabaseEvents() {
+        const overlay = this.container.querySelector('.profile-database-overlay');
+        const infoButton = this.container.querySelector('.profile-database-btn');
+
+        if (!overlay || !infoButton) {
+            return;
+        }
+
+        const closeButton = overlay.querySelector('.profile-database-close');
+
+        infoButton.addEventListener('click', () => {
+            this.openProfileDatabase();
+        });
+
+        if (closeButton) {
+            closeButton.addEventListener('click', () => {
+                this.closeProfileDatabase();
+            });
+        }
+
+        overlay.addEventListener('click', (event) => {
+            if (event.target === overlay) {
+                this.closeProfileDatabase();
+            }
+        });
+    }
+
+    resetProfileDatabaseOverlayState() {
+        if (this.profileDatabaseHideTimeout) {
+            clearTimeout(this.profileDatabaseHideTimeout);
+            this.profileDatabaseHideTimeout = null;
+        }
+
+        if (typeof document !== 'undefined' && document.body) {
+            document.body.style.overflow = this.bodyOriginalOverflow || '';
+        }
+
+        this.profileDatabaseLastFocus = null;
+        this.bodyOriginalOverflow = '';
+    }
+
+    async openProfileDatabase() {
+        const overlay = this.container.querySelector('.profile-database-overlay');
+
+        if (!overlay || this.currentView !== 'profil-iu') {
+            return;
+        }
+
+        if (this.profileDatabaseHideTimeout) {
+            clearTimeout(this.profileDatabaseHideTimeout);
+            this.profileDatabaseHideTimeout = null;
+        }
+
+        const triggerButton = this.container.querySelector('.profile-database-btn');
+        if (triggerButton) {
+            triggerButton.setAttribute('aria-expanded', 'true');
+        }
+
+        if (typeof document !== 'undefined' && document.body) {
+            this.bodyOriginalOverflow = document.body.style.overflow;
+            document.body.style.overflow = 'hidden';
+        }
+
+        this.profileDatabaseLastFocus = document.activeElement instanceof HTMLElement
+            ? document.activeElement
+            : null;
+
+        overlay.hidden = false;
+        overlay.classList.remove('is-visible');
+        requestAnimationFrame(() => {
+            overlay.classList.add('is-visible');
+        });
+
+        document.addEventListener('keydown', this.handleProfileDatabaseKeydown);
+
+        await this.populateProfileDatabaseTable(overlay);
+
+        const dialog = overlay.querySelector('.profile-database-dialog');
+        if (dialog) {
+            dialog.focus();
+        }
+    }
+
+    closeProfileDatabase() {
+        const overlay = this.container.querySelector('.profile-database-overlay');
+
+        if (!overlay || overlay.hidden) {
+            return;
+        }
+
+        overlay.classList.remove('is-visible');
+
+        const triggerButton = this.container.querySelector('.profile-database-btn');
+        if (triggerButton) {
+            triggerButton.setAttribute('aria-expanded', 'false');
+        }
+
+        document.removeEventListener('keydown', this.handleProfileDatabaseKeydown);
+
+        if (typeof document !== 'undefined' && document.body) {
+            document.body.style.overflow = this.bodyOriginalOverflow || '';
+        }
+
+        this.profileDatabaseHideTimeout = setTimeout(() => {
+            overlay.hidden = true;
+            const tableContainer = overlay.querySelector('.profile-database-table');
+            if (tableContainer) {
+                tableContainer.scrollTop = 0;
+            }
+            this.profileDatabaseHideTimeout = null;
+        }, 250);
+
+        if (this.profileDatabaseLastFocus && typeof this.profileDatabaseLastFocus.focus === 'function') {
+            this.profileDatabaseLastFocus.focus();
+        }
+
+        this.profileDatabaseLastFocus = null;
+        this.bodyOriginalOverflow = '';
+    }
+
+    async populateProfileDatabaseTable(overlay) {
+        if (!overlay) {
+            return;
+        }
+
+        const tableContainer = overlay.querySelector('.profile-database-table');
+        if (!tableContainer) {
+            return;
+        }
+
+        tableContainer.setAttribute('aria-busy', 'true');
+        tableContainer.innerHTML = '<p class="profile-database-status">Načítání dat…</p>';
+
+        try {
+            const profiles = await this.loadProfileData();
+
+            if (this.currentView !== 'profil-iu') {
+                return;
+            }
+
+            if (!Array.isArray(profiles) || profiles.length === 0) {
+                tableContainer.innerHTML = '<p class="profile-database-status">Data nejsou k dispozici.</p>';
+                return;
+            }
+
+            const sortedProfiles = this.sortProfilesForTable(profiles);
+            const dimensionFormatter = new Intl.NumberFormat('cs-CZ', {
+                maximumFractionDigits: 0
+            });
+
+            const rowsHTML = sortedProfiles.map((profile, index) => {
+                const type = profile && typeof profile.Typ === 'string' ? profile.Typ.trim() : '';
+                const dimensionValue = Number(profile && profile.Rozmer);
+                const weightValue = Number(profile && profile.Hmotnost_m);
+                const rowNumber = index + 1;
+                const dimensionText = Number.isFinite(dimensionValue)
+                    ? dimensionFormatter.format(dimensionValue)
+                    : '–';
+                const weightText = Number.isFinite(weightValue)
+                    ? this.formatWithPrecision(weightValue, 3)
+                    : '–';
+
+                return `
+                    <tr>
+                        <td data-label="Pořadí" class="profile-database-index">${rowNumber}</td>
+                        <td data-label="Typ">${this.escapeHTML(type)}</td>
+                        <td data-label="Rozměr [mm]">${this.escapeHTML(dimensionText)}</td>
+                        <td data-label="Hmotnost [kg/m]">${this.escapeHTML(weightText)}</td>
+                    </tr>
+                `;
+            }).join('');
+
+            tableContainer.innerHTML = `
+                <table>
+                    <caption class="visually-hidden">Kompletní databáze profilů I a U</caption>
+                    <thead>
+                        <tr>
+                            <th scope="col" class="profile-database-col-index">Pořadí</th>
+                            <th scope="col">Typ</th>
+                            <th scope="col">Rozměr [mm]</th>
+                            <th scope="col">Hmotnost [kg/m]</th>
+                        </tr>
+                    </thead>
+                    <tbody>
+                        ${rowsHTML}
+                    </tbody>
+                </table>
+            `;
+
+            tableContainer.scrollTop = 0;
+        } catch (error) {
+            console.error('Nepodařilo se načíst databázi profilů:', error);
+            tableContainer.innerHTML = '<p class="profile-database-status">Nepodařilo se načíst databázi profilů.</p>';
+        } finally {
+            tableContainer.setAttribute('aria-busy', 'false');
+        }
+    }
+
+    sortProfilesForTable(profiles) {
+        return profiles.slice().sort((a, b) => {
+            const typeA = a && typeof a.Typ === 'string' ? a.Typ : '';
+            const typeB = b && typeof b.Typ === 'string' ? b.Typ : '';
+            const typeComparison = typeA.localeCompare(typeB, 'cs');
+
+            if (typeComparison !== 0) {
+                return typeComparison;
+            }
+
+            const dimensionA = Number(a && a.Rozmer);
+            const dimensionB = Number(b && b.Rozmer);
+
+            if (Number.isFinite(dimensionA) && Number.isFinite(dimensionB)) {
+                return dimensionA - dimensionB;
+            }
+
+            if (Number.isFinite(dimensionA)) {
+                return -1;
+            }
+
+            if (Number.isFinite(dimensionB)) {
+                return 1;
+            }
+
+            return 0;
+        });
+    }
+
+    handleProfileDatabaseKeydown(event) {
+        if (event.key === 'Escape') {
+            this.closeProfileDatabase();
+        }
     }
 
     getMaterialDensity() {
