@@ -499,6 +499,18 @@ main {
     gap: 2rem;
 }
 
+.flatbar-description {
+    margin: 0;
+    padding: 1rem 1.2rem;
+    border-radius: var(--radius-medium);
+    background: rgba(255, 255, 255, 0.92);
+    border: 1px solid rgba(166, 206, 57, 0.2);
+    color: var(--color-muted);
+    font-size: 0.95rem;
+    line-height: 1.5;
+    box-shadow: inset 0 1px 0 rgba(255, 255, 255, 0.6);
+}
+
 .calculator-view--flatbar .flatbar-calculators {
     display: grid;
     gap: 1.9rem;
@@ -517,8 +529,17 @@ main {
 
 .flatbar-calculator__header {
     display: flex;
-    align-items: center;
-    justify-content: space-between;
+    flex-direction: column;
+    align-items: flex-start;
+    gap: 0.4rem;
+}
+
+.flatbar-calculator__description {
+    margin: 0;
+    margin-left: 0;
+    font-size: 0.9rem;
+    color: var(--color-muted);
+    font-weight: 500;
 }
 
 .flatbar-calculator__header h3 {
@@ -599,6 +620,41 @@ main {
     background: rgba(255, 255, 255, 0.9);
     border: 1px solid rgba(166, 206, 57, 0.18);
     color: var(--color-muted);
+}
+
+.flatbar-state {
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+    justify-content: center;
+    gap: 1.2rem;
+    min-height: 220px;
+    padding: 2rem 1.5rem;
+    text-align: center;
+    background: linear-gradient(135deg, rgba(255, 255, 255, 0.94), rgba(210, 230, 168, 0.24));
+    border-radius: var(--radius-large);
+    border: 1px solid rgba(166, 206, 57, 0.28);
+    color: var(--color-muted);
+    font-size: 1rem;
+    box-shadow: var(--shadow-card);
+}
+
+.flatbar-state p {
+    margin: 0;
+}
+
+.flatbar-state.is-loading p::before {
+    content: '⏳ ';
+}
+
+.flatbar-state.is-error {
+    border-color: rgba(220, 53, 69, 0.28);
+    background: linear-gradient(135deg, rgba(255, 255, 255, 0.92), rgba(255, 205, 210, 0.28));
+    color: var(--color-danger);
+}
+
+.flatbar-state .retry-btn {
+    min-width: 180px;
 }
 
 .calculator-view--flatbar .calculator-actions {
