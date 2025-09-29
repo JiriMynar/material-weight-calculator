@@ -598,14 +598,39 @@ main {
     letter-spacing: 0.02em;
 }
 
+
+.profile-database-table .profile-database-col-index,
+.profile-database-table .profile-database-index {
+    width: 1%;
+    text-align: right;
+    font-variant-numeric: tabular-nums;
+    color: var(--color-muted);
+}
+
+.profile-database-table .profile-database-col-index {
+    min-width: 3.5rem;
+}
+
+.profile-database-table th,
+.profile-database-table td {
+    padding: 0.75rem 1.1rem;
+
 .profile-database-table th,
 .profile-database-table td {
     padding: 0.75rem 1.1rem;
     text-align: left;
+
     font-size: 0.96rem;
     border-bottom: 1px solid rgba(166, 206, 57, 0.18);
     white-space: nowrap;
 }
+
+
+.profile-database-table th:not(.profile-database-col-index),
+.profile-database-table td:not(.profile-database-index) {
+    text-align: left;
+}
+
 
 .profile-database-table tbody tr:nth-child(even) {
     background: rgba(166, 206, 57, 0.06);
