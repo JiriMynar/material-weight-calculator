@@ -625,20 +625,12 @@ main {
     width: 100%;
     border-collapse: collapse;
     min-width: 640px;
-    table-layout: fixed;
-}
 
-.profile-database-table col.profile-database-col-index {
-    width: 14%;
-}
-
-.profile-database-table col.profile-database-col-type {
-    width: 36%;
 }
 
 .profile-database-table col.profile-database-col-dimension,
 .profile-database-table col.profile-database-col-weight {
-    width: 25%;
+
 }
 
 .profile-database-table thead th {
@@ -662,26 +654,7 @@ main {
     color: var(--color-muted);
 }
 
-.profile-database-table .profile-database-index .profile-database-cell--number {
-    text-align: left;
-}
 
-.profile-database-table th,
-.profile-database-table td {
-    padding: 0.75rem 1rem;
-    text-align: left;
-    font-size: 0.96rem;
-    border-bottom: 1px solid rgba(166, 206, 57, 0.18);
-    vertical-align: middle;
-    background-clip: padding-box;
-}
-
-.profile-database-table td {
-    position: relative;
-}
-
-.profile-database-table .profile-database-number {
-    text-align: right;
     font-variant-numeric: tabular-nums;
     font-feature-settings: 'tnum' 1, 'lnum' 1;
 }
@@ -700,15 +673,6 @@ main {
     white-space: nowrap;
 }
 
-.profile-database-table .profile-database-header-dimension,
-.profile-database-table .profile-database-header-weight {
-    text-align: right;
-}
-
-.profile-database-table .profile-database-header-index,
-.profile-database-table .profile-database-index {
-    min-width: 3.5rem;
-}
 
 .profile-database-table .profile-database-header-dimension,
 .profile-database-table .profile-database-header-weight,
@@ -746,13 +710,12 @@ main {
 }
 
 .profile-database-cell {
-    display: block;
-    width: 100%;
+
     line-height: 1.35;
 }
 
 .profile-database-cell--number {
-    text-align: right;
+
     font-variant-numeric: tabular-nums;
     font-feature-settings: 'tnum' 1, 'lnum' 1;
 }

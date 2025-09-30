@@ -1308,10 +1308,6 @@ class MaterialCalculatorApp {
             exportButton.addEventListener('click', this.exportProfileDatabaseToExcel);
         }
 
-        if (exportTrigger) {
-            exportTrigger.addEventListener('click', this.exportProfileDatabaseToExcel);
-        }
-
         if (closeButton) {
             closeButton.addEventListener('click', () => {
                 this.closeProfileDatabase();
@@ -1651,21 +1647,12 @@ class MaterialCalculatorApp {
 </Workbook>`;
     }
 
-    async exportProfileDatabaseToExcel(event) {
+
         if (this.currentView !== 'profil-iu') {
             return;
         }
 
-        const overlay = this.container.querySelector('.profile-database-overlay');
-        const overlayExportButton = overlay ? overlay.querySelector('.profile-database-export') : null;
-        const triggerButton = event && event.currentTarget instanceof HTMLButtonElement
-            ? event.currentTarget
-            : null;
-        const buttonToDisable = triggerButton || overlayExportButton;
 
-        if (buttonToDisable) {
-            buttonToDisable.disabled = true;
-            buttonToDisable.setAttribute('aria-busy', 'true');
         }
 
         try {
@@ -1692,9 +1679,7 @@ class MaterialCalculatorApp {
             console.error('Chyba při exportu databáze profilů:', error);
             alert('Export databáze profilů se nezdařil.');
         } finally {
-            if (buttonToDisable) {
-                buttonToDisable.disabled = false;
-                buttonToDisable.removeAttribute('aria-busy');
+
             }
         }
     }
