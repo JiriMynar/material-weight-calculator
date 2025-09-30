@@ -594,17 +594,6 @@ class MaterialCalculatorApp {
                 </button>
             `
             : '';
-        const profileDatabaseExportTriggerHTML = type === 'profil-iu'
-            ? `
-                <button
-                    type="button"
-                    class="btn btn-primary profile-database-export-trigger"
-                >
-                    <span class="btn-icon" aria-hidden="true">📥</span>
-                    <span>Export do Excelu</span>
-                </button>
-            `
-            : '';
         const profileDatabaseOverlayHTML = type === 'profil-iu'
             ? this.renderProfileDatabaseOverlay()
             : '';
@@ -619,7 +608,6 @@ class MaterialCalculatorApp {
                     </div>
                     <div class="calculator-header-actions">
                         ${profileDatabaseButtonHTML}
-                        ${profileDatabaseExportTriggerHTML}
                         <button type="button" class="btn btn-danger reset-btn">Resetovat</button>
                     </div>
                 </div>
@@ -1534,7 +1522,6 @@ class MaterialCalculatorApp {
     setupProfileDatabaseEvents() {
         const overlay = this.container.querySelector('.profile-database-overlay');
         const infoButton = this.container.querySelector('.profile-database-btn');
-        const exportTrigger = this.container.querySelector('.profile-database-export-trigger');
 
         if (!overlay || !infoButton) {
             return;
@@ -1900,8 +1887,7 @@ class MaterialCalculatorApp {
         }
 
         const exportButtons = [
-            this.container.querySelector('.profile-database-export'),
-            this.container.querySelector('.profile-database-export-trigger')
+
         ].filter(Boolean);
 
         const setButtonsDisabled = (isDisabled) => {
