@@ -267,6 +267,8 @@ main {
 .calculator-header-actions {
     display: inline-flex;
     align-items: center;
+    justify-content: flex-end;
+    flex-wrap: wrap;
     gap: 0.75rem;
 }
 
@@ -623,20 +625,12 @@ main {
     width: 100%;
     border-collapse: collapse;
     min-width: 640px;
-    table-layout: auto;
-}
 
-.profile-database-table col.profile-database-col-index {
-    width: clamp(88px, 12%, 120px);
-}
-
-.profile-database-table col.profile-database-col-type {
-    width: clamp(220px, 38%, 420px);
 }
 
 .profile-database-table col.profile-database-col-dimension,
 .profile-database-table col.profile-database-col-weight {
-    width: clamp(150px, 25%, 240px);
+
 }
 
 .profile-database-table thead th {
@@ -660,22 +654,7 @@ main {
     color: var(--color-muted);
 }
 
-.profile-database-table th,
-.profile-database-table td {
-    padding: 0.75rem 1rem;
-    text-align: left;
-    font-size: 0.96rem;
-    border-bottom: 1px solid rgba(166, 206, 57, 0.18);
-    vertical-align: middle;
-    background-clip: padding-box;
-}
 
-.profile-database-table td {
-    position: relative;
-}
-
-.profile-database-table .profile-database-number {
-    text-align: left;
     font-variant-numeric: tabular-nums;
     font-feature-settings: 'tnum' 1, 'lnum' 1;
 }
@@ -694,10 +673,6 @@ main {
     white-space: nowrap;
 }
 
-.profile-database-table .profile-database-header-index,
-.profile-database-table .profile-database-index {
-    min-width: 3.5rem;
-}
 
 .profile-database-table .profile-database-header-dimension,
 .profile-database-table .profile-database-header-weight,
@@ -735,16 +710,12 @@ main {
 }
 
 .profile-database-cell {
-    display: inline-flex;
-    width: 100%;
-    align-items: baseline;
-    justify-content: flex-start;
-    gap: 0.25rem;
+
     line-height: 1.35;
 }
 
 .profile-database-cell--number {
-    justify-content: flex-start;
+
     font-variant-numeric: tabular-nums;
     font-feature-settings: 'tnum' 1, 'lnum' 1;
 }
@@ -777,7 +748,9 @@ main {
 
 .calculator-view--flatbar .flatbar-calculators {
     display: grid;
+    grid-template-columns: repeat(auto-fit, minmax(320px, 1fr));
     gap: 1.9rem;
+    align-items: stretch;
 }
 
 .flatbar-calculator {
@@ -789,6 +762,7 @@ main {
     display: flex;
     flex-direction: column;
     gap: 1.6rem;
+    height: 100%;
 }
 
 .flatbar-calculator__header {
@@ -816,6 +790,7 @@ main {
     display: grid;
     grid-template-columns: repeat(auto-fit, minmax(240px, 1fr));
     gap: 1.5rem;
+    align-items: flex-start;
 }
 
 .flatbar-field {
@@ -863,6 +838,7 @@ main {
     align-items: center;
     gap: 0.5rem;
     text-align: center;
+    margin-top: auto;
 }
 
 .flatbar-result-label {

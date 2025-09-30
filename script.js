@@ -545,6 +545,17 @@ class MaterialCalculatorApp {
                 </button>
             `
             : '';
+        const profileDatabaseExportTriggerHTML = type === 'profil-iu'
+            ? `
+                <button
+                    type="button"
+                    class="btn btn-primary profile-database-export-trigger"
+                >
+                    <span class="btn-icon" aria-hidden="true">📥</span>
+                    <span>Export do Excelu</span>
+                </button>
+            `
+            : '';
         const profileDatabaseOverlayHTML = type === 'profil-iu'
             ? this.renderProfileDatabaseOverlay()
             : '';
@@ -556,6 +567,7 @@ class MaterialCalculatorApp {
                     <h2>${config.title}</h2>
                     <div class="calculator-header-actions">
                         ${profileDatabaseButtonHTML}
+                        ${profileDatabaseExportTriggerHTML}
                         <button type="button" class="btn btn-danger reset-btn">Resetovat</button>
                     </div>
                 </div>
@@ -1279,6 +1291,7 @@ class MaterialCalculatorApp {
     setupProfileDatabaseEvents() {
         const overlay = this.container.querySelector('.profile-database-overlay');
         const infoButton = this.container.querySelector('.profile-database-btn');
+        const exportTrigger = this.container.querySelector('.profile-database-export-trigger');
 
         if (!overlay || !infoButton) {
             return;
@@ -1634,17 +1647,12 @@ class MaterialCalculatorApp {
 </Workbook>`;
     }
 
-    async exportProfileDatabaseToExcel() {
+
         if (this.currentView !== 'profil-iu') {
             return;
         }
 
-        const overlay = this.container.querySelector('.profile-database-overlay');
-        const exportButton = overlay ? overlay.querySelector('.profile-database-export') : null;
 
-        if (exportButton) {
-            exportButton.disabled = true;
-            exportButton.setAttribute('aria-busy', 'true');
         }
 
         try {
@@ -1671,9 +1679,7 @@ class MaterialCalculatorApp {
             console.error('Chyba při exportu databáze profilů:', error);
             alert('Export databáze profilů se nezdařil.');
         } finally {
-            if (exportButton) {
-                exportButton.disabled = false;
-                exportButton.removeAttribute('aria-busy');
+
             }
         }
     }
