@@ -51,6 +51,10 @@ const CALCULATORS = {
         resultLabel: 'Hmotnost:',
         resultUnit: 'kg',
         showMaterialSelector: true,
+        formula: `
+            <p><strong>Hmotnost</strong> = ρ × π × (D<sup>2</sup> − d<sup>2</sup>) × L ÷ (4 × 10<sup>9</sup>)</p>
+            <p>ρ je hustota zvoleného materiálu [kg/m<sup>3</sup>], D a d jsou vnější a vnitřní průměr [mm] a L je délka [mm].</p>
+        `,
         inputs: [
             { id: 'outer-diameter', label: 'Vnější průměr D [mm]', type: 'number' },
             { id: 'inner-diameter', label: 'Vnitřní průměr d [mm]', type: 'number' },
@@ -83,6 +87,10 @@ const CALCULATORS = {
         resultLabel: 'Hmotnost:',
         resultUnit: 'kg',
         showMaterialSelector: true,
+        formula: `
+            <p><strong>Hmotnost</strong> = ρ × π × (D<sup>2</sup> − (D − 2S)<sup>2</sup>) × L ÷ (4 × 10<sup>9</sup>)</p>
+            <p>ρ je hustota [kg/m<sup>3</sup>], D je vnější průměr [mm], S tloušťka stěny [mm] a L délka [mm].</p>
+        `,
         inputs: [
             { id: 'outer-diameter', label: 'Vnější průměr D [mm]', type: 'number' },
             { id: 'wall-thickness', label: 'Tloušťka stěny S [mm]', type: 'number' },
@@ -117,6 +125,10 @@ const CALCULATORS = {
         resultLabel: 'Hmotnost:',
         resultUnit: 'kg',
         showMaterialSelector: true,
+        formula: `
+            <p><strong>Hmotnost</strong> = ρ × S × V × L ÷ 10<sup>9</sup></p>
+            <p>ρ je hustota materiálu [kg/m<sup>3</sup>], S je šířka [mm], V výška [mm] a L délka hranolu [mm].</p>
+        `,
         inputs: [
             { id: 'width', label: 'Šířka S [mm]', type: 'number' },
             { id: 'height', label: 'Výška V [mm]', type: 'number' },
@@ -149,6 +161,10 @@ const CALCULATORS = {
         resultLabel: 'Hmotnost:',
         resultUnit: 'kg',
         showMaterialSelector: true,
+        formula: `
+            <p><strong>Hmotnost</strong> = ρ × π × D<sup>2</sup> × L ÷ (4 × 10<sup>9</sup>)</p>
+            <p>ρ je hustota [kg/m<sup>3</sup>], D průměr válce [mm] a L jeho délka [mm].</p>
+        `,
         inputs: [
             { id: 'diameter', label: 'Průměr D [mm]', type: 'number' },
             { id: 'length', label: 'Délka L [mm]', type: 'number' }
@@ -179,6 +195,10 @@ const CALCULATORS = {
         resultLabel: 'Hmotnost:',
         resultUnit: 'kg',
         showMaterialSelector: true,
+        formula: `
+            <p><strong>Hmotnost</strong> = ρ × (A × B − (A − 2T) × (B − 2T)) × L ÷ 10<sup>9</sup></p>
+            <p>ρ je hustota [kg/m<sup>3</sup>], A a B jsou vnější rozměry profilu [mm], T tloušťka stěny [mm] a L délka [mm].</p>
+        `,
         inputs: [
             { id: 'width', label: 'Šířka A [mm]', type: 'number' },
             { id: 'height', label: 'Výška B [mm]', type: 'number' },
@@ -222,6 +242,10 @@ const CALCULATORS = {
         resultLabel: 'Hmotnost:',
         resultUnit: 'kg',
         showMaterialSelector: true,
+        formula: `
+            <p><strong>Hmotnost</strong> = ρ × (A × T + (B − T) × T) × L ÷ 10<sup>9</sup></p>
+            <p>ρ je hustota [kg/m<sup>3</sup>], A a B jsou délky ramen profilu [mm], T tloušťka [mm] a L délka [mm].</p>
+        `,
         inputs: [
             { id: 'width', label: 'Šířka A [mm]', type: 'number' },
             { id: 'height', label: 'Výška B [mm]', type: 'number' },
@@ -267,6 +291,10 @@ const CALCULATORS = {
         resultLabel: 'Hmotnost:',
         resultUnit: 'kg',
         showMaterialSelector: false,
+        formula: `
+            <p><strong>Hmotnost</strong> = m<sub>1&nbsp;m</sub> × L ÷ 1000</p>
+            <p>m<sub>1&nbsp;m</sub> je hmotnost vybraného profilu na jeden metr [kg/m] a L je délka profilu [mm].</p>
+        `,
         inputs: [
             {
                 id: 'profile-type',
@@ -324,6 +352,10 @@ const CALCULATORS = {
         resultLabel: 'Délka:',
         resultUnit: 'm',
         showMaterialSelector: false,
+        formula: `
+            <p><strong>Délka</strong> = π × D × n ÷ 1000</p>
+            <p>D je průměr špule [mm] a n počet závitů kabelu.</p>
+        `,
         inputs: [
             { id: 'spool-diameter', label: 'Průměr špule D [mm]', type: 'number' },
             { id: 'turns-count', label: 'Počet závitů kabelu', type: 'number' }
@@ -349,6 +381,10 @@ const CALCULATORS = {
         resultLabel: 'Plocha:',
         resultUnit: 'm²',
         showMaterialSelector: false,
+        formula: `
+            <p><strong>Plocha</strong> = π × (D<sup>2</sup> − d<sup>2</sup>) × b ÷ (4 × t × 10<sup>6</sup>)</p>
+            <p>D je průměr role [mm], d průměr špule [mm], b šířka role [mm] a t síla materiálu [mm].</p>
+        `,
         inputs: [
             { id: 'roll-diameter', label: 'Průměr role D [mm]', type: 'number' },
             { id: 'spool-diameter', label: 'Průměr špule d [mm]', type: 'number' },
@@ -531,6 +567,18 @@ class MaterialCalculatorApp {
         const inputsHTML = config.inputs.map((input) => this.renderInput(input)).join('');
         const notesFieldHTML = this.renderNotesField();
         const initialResult = this.formatResult(0, config);
+        const formulaTargetId = typeof config.formula === 'string' && config.formula.trim() !== ''
+            ? `formula-info-${type}`
+            : null;
+        const formulaTitle = typeof config.formulaTitle === 'string' && config.formulaTitle.trim() !== ''
+            ? config.formulaTitle.trim()
+            : 'Vzorec výpočtu';
+        const formulaButtonHTML = formulaTargetId
+            ? this.buildFormulaTrigger(formulaTargetId)
+            : '';
+        const formulaInfoHTML = formulaTargetId
+            ? this.buildFormulaPanel(formulaTargetId, config.formula, formulaTitle)
+            : '';
         const profileDatabaseButtonHTML = type === 'profil-iu'
             ? `
                 <button
@@ -564,13 +612,17 @@ class MaterialCalculatorApp {
             <div class="calculator-view" data-calculator="${type}">
                 <div class="calculator-header">
                     <button type="button" class="btn btn-secondary back-btn">← Zpět</button>
-                    <h2>${config.title}</h2>
+                    <div class="calculator-title">
+                        <h2>${config.title}</h2>
+                        ${formulaButtonHTML}
+                    </div>
                     <div class="calculator-header-actions">
                         ${profileDatabaseButtonHTML}
                         ${profileDatabaseExportTriggerHTML}
                         <button type="button" class="btn btn-danger reset-btn">Resetovat</button>
                     </div>
                 </div>
+                ${formulaInfoHTML}
                 ${materialSelectorHTML}
                 <form class="calculator-form" novalidate>
                     ${inputsHTML}
@@ -593,7 +645,7 @@ class MaterialCalculatorApp {
                         <span>Snímek obrazovky</span>
                     </button>
                     <button type="button" class="btn btn-primary export-btn">
-                        <span class="btn-icon" aria-hidden="true">📧</span>
+                        <span class="btn-icon" aria-hidden="true">✉️</span>
                         <span>Uložit do e-mailu</span>
                     </button>
                 </div>
@@ -602,6 +654,7 @@ class MaterialCalculatorApp {
         `;
 
         this.attachCalculatorEvents(config);
+        this.setupFormulaInfoEvents();
 
         if (type === 'profil-iu') {
             this.populateProfileTypeOptions().catch((error) => {
@@ -736,7 +789,9 @@ class MaterialCalculatorApp {
             <div class="calculator-view calculator-view--flatbar" data-calculator="plochace">
                 <div class="calculator-header">
                     <button type="button" class="btn btn-secondary back-btn">← Zpět</button>
-                    <h2>${title}</h2>
+                    <div class="calculator-title">
+                        <h2>${title}</h2>
+                    </div>
                     <button type="button" class="btn btn-danger reset-btn" disabled>Resetovat</button>
                 </div>
                 <div class="flatbar-state ${stateClass}" role="status">
@@ -770,13 +825,25 @@ class MaterialCalculatorApp {
             ? calculators.map((calculator) => this.buildFlatBarCalculatorMarkup(calculator)).join('')
             : '<p class="flatbar-empty">Konfigurace kalkulaček se nepodařilo načíst.</p>';
         const notesFieldHTML = this.renderNotesField();
+        const formulaContent = this.buildFlatbarFormulaContent(calculators);
+        const formulaTargetId = formulaContent ? 'formula-info-plochace' : null;
+        const formulaButtonHTML = formulaTargetId
+            ? this.buildFormulaTrigger(formulaTargetId, 'Zobrazit vzorec pro plocháče')
+            : '';
+        const formulaInfoHTML = formulaTargetId
+            ? this.buildFormulaPanel(formulaTargetId, formulaContent, 'Vzorec rozvinuté délky')
+            : '';
         this.container.innerHTML = `
             <div class="calculator-view calculator-view--flatbar" data-calculator="plochace">
                 <div class="calculator-header">
                     <button type="button" class="btn btn-secondary back-btn">← Zpět</button>
-                    <h2>${config.title}</h2>
+                    <div class="calculator-title">
+                        <h2>${config.title}</h2>
+                        ${formulaButtonHTML}
+                    </div>
                     <button type="button" class="btn btn-danger reset-btn">Resetovat</button>
                 </div>
+                ${formulaInfoHTML}
                 ${notesFieldHTML}
                 <div class="flatbar-content">
                     ${description}
@@ -794,7 +861,7 @@ class MaterialCalculatorApp {
                         <span>Snímek obrazovky</span>
                     </button>
                     <button type="button" class="btn btn-primary export-btn">
-                        <span class="btn-icon" aria-hidden="true">📧</span>
+                        <span class="btn-icon" aria-hidden="true">✉️</span>
                         <span>Uložit do e-mailu</span>
                     </button>
                 </div>
@@ -833,6 +900,58 @@ class MaterialCalculatorApp {
         if (exportButton) {
             exportButton.addEventListener('click', this.exportToEmail);
         }
+
+        this.setupFormulaInfoEvents();
+    }
+
+    buildFlatbarFormulaContent(calculators) {
+        if (!Array.isArray(calculators) || calculators.length === 0) {
+            return '';
+        }
+
+        const numberFormatter = new Intl.NumberFormat('cs-CZ', {
+            maximumFractionDigits: 3
+        });
+        const minusSign = '−';
+        const formatConstant = (value, fallback = 0) => {
+            const numericValue = this.getFlatbarNumber(value, fallback);
+            if (!Number.isFinite(numericValue)) {
+                return numberFormatter.format(fallback);
+            }
+            return numberFormatter.format(numericValue);
+        };
+
+        const itemsHTML = calculators.map((calculator) => {
+            const title = typeof calculator.title === 'string' && calculator.title.trim() !== ''
+                ? this.escapeHTML(calculator.title.trim())
+                : this.escapeHTML('Varianta');
+            const piFactorText = formatConstant(calculator.piFactor, FLATBAR_LENGTH_PI);
+            const thicknessMultiplierText = formatConstant(calculator.thicknessMultiplier, 3);
+            const adjustmentValue = this.getFlatbarNumber(calculator.adjustment, 0);
+            let adjustmentText = '';
+
+            if (Number.isFinite(adjustmentValue) && adjustmentValue !== 0) {
+                const formattedAdjustment = numberFormatter.format(Math.abs(adjustmentValue));
+                adjustmentText = adjustmentValue > 0
+                    ? ` + ${formattedAdjustment}`
+                    : ` ${minusSign} ${formattedAdjustment}`;
+            }
+
+            const expression = `L = D × ${piFactorText} + t × ${thicknessMultiplierText}${adjustmentText}`;
+            const safeExpression = this.escapeHTML(expression);
+
+            return `
+                <li><strong>${title}:</strong> ${safeExpression}</li>
+            `;
+        }).join('');
+
+        return `
+            <p><strong>Rozvinutá délka</strong> = D × π<sub>f</sub> + t × k + c</p>
+            <p>D je vnitřní průměr (mm), t síla plechu (mm), π<sub>f</sub>, k a c jsou koeficienty uvedené níže pro jednotlivé kalkulačky:</p>
+            <ul class="formula-info__list">
+                ${itemsHTML}
+            </ul>
+        `;
     }
 
     buildFlatBarCalculatorMarkup(calculator) {
@@ -1173,6 +1292,129 @@ class MaterialCalculatorApp {
                 ></textarea>
             </section>
         `;
+    }
+
+    buildFormulaTrigger(targetId, label = 'Zobrazit vzorec výpočtu') {
+        if (!targetId) {
+            return '';
+        }
+
+        const safeTargetId = this.escapeHTML(targetId);
+        const safeLabel = this.escapeHTML(label);
+
+        return `
+            <button
+                type="button"
+                class="formula-info__trigger"
+                data-formula-target="${safeTargetId}"
+                aria-controls="${safeTargetId}"
+                aria-expanded="false"
+                title="${safeLabel}"
+            >
+                <span aria-hidden="true">I</span>
+                <span class="visually-hidden">${safeLabel}</span>
+            </button>
+        `;
+    }
+
+    buildFormulaPanel(targetId, content, title = 'Vzorec výpočtu') {
+        if (!targetId || typeof content !== 'string') {
+            return '';
+        }
+
+        const safeTargetId = this.escapeHTML(targetId);
+        const safeTitle = this.escapeHTML(title);
+        const sanitizedContent = content.trim();
+
+        if (sanitizedContent === '') {
+            return '';
+        }
+
+        return `
+            <div class="formula-info" id="${safeTargetId}" hidden>
+                <div class="formula-info__card" role="group" aria-labelledby="${safeTargetId}-title" tabindex="-1">
+                    <div class="formula-info__header">
+                        <h3 id="${safeTargetId}-title">${safeTitle}</h3>
+                        <button type="button" class="formula-info__close" aria-label="Zavřít panel se vzorcem">✖️</button>
+                    </div>
+                    <div class="formula-info__body">
+                        ${sanitizedContent}
+                    </div>
+                </div>
+            </div>
+        `;
+    }
+
+    setupFormulaInfoEvents() {
+        if (!this.container) {
+            return;
+        }
+
+        const triggers = Array.from(this.container.querySelectorAll('.formula-info__trigger'));
+        triggers.forEach((trigger) => {
+            const targetId = trigger.getAttribute('data-formula-target');
+            if (!targetId) {
+                return;
+            }
+
+            const selector = typeof CSS !== 'undefined' && typeof CSS.escape === 'function'
+                ? `#${CSS.escape(targetId)}`
+                : `#${targetId.replace(/([\.\[\]#])/g, '\\$1')}`;
+            const panel = this.container.querySelector(selector);
+            if (!panel) {
+                return;
+            }
+
+            const closeButton = panel.querySelector('.formula-info__close');
+            const card = panel.querySelector('.formula-info__card');
+
+            const hidePanel = () => {
+                if (panel.hidden) {
+                    return;
+                }
+                panel.hidden = true;
+                trigger.setAttribute('aria-expanded', 'false');
+            };
+
+            const showPanel = () => {
+                if (!panel.hidden) {
+                    return;
+                }
+                panel.hidden = false;
+                trigger.setAttribute('aria-expanded', 'true');
+                if (card && typeof card.focus === 'function') {
+                    card.focus();
+                }
+            };
+
+            trigger.addEventListener('click', () => {
+                if (panel.hidden) {
+                    showPanel();
+                } else {
+                    hidePanel();
+                }
+            });
+
+            if (closeButton) {
+                closeButton.addEventListener('click', () => {
+                    hidePanel();
+                    trigger.focus();
+                });
+            }
+
+            panel.addEventListener('keydown', (event) => {
+                if (event.key === 'Escape' || event.key === 'Esc') {
+                    hidePanel();
+                    trigger.focus();
+                }
+            });
+
+            panel.addEventListener('click', (event) => {
+                if (event.target === panel) {
+                    hidePanel();
+                }
+            });
+        });
     }
 
     renderInput(input) {
