@@ -63,14 +63,19 @@ const CALCULATORS = {
             const density = app.getMaterialDensity();
 
             if (D <= 0 || d <= 0 || L <= 0 || d >= D) {
-                return 0;
+                return {
+                    value: 0,
+                    error: 'Zadejte kladné hodnoty a zajistěte, aby vnitřní průměr byl menší než vnější.'
+                };
             }
 
             const area = (Math.PI * (D ** 2 - d ** 2)) / 4;
             const volume = area * L;
             const volumeM3 = volume / 1_000_000_000;
 
-            return volumeM3 * density;
+            return {
+                value: volumeM3 * density
+            };
         }
     },
     'trubka': {
@@ -90,7 +95,10 @@ const CALCULATORS = {
             const density = app.getMaterialDensity();
 
             if (D <= 0 || S <= 0 || L <= 0 || S >= D / 2) {
-                return 0;
+                return {
+                    value: 0,
+                    error: 'Zadejte kladné hodnoty a tloušťka stěny musí být menší než polovina vnějšího průměru.'
+                };
             }
 
             const outerArea = Math.PI * (D / 2) ** 2;
@@ -99,7 +107,9 @@ const CALCULATORS = {
             const volume = materialArea * L;
             const volumeM3 = volume / 1_000_000_000;
 
-            return volumeM3 * density;
+            return {
+                value: volumeM3 * density
+            };
         }
     },
     'hranol': {
@@ -119,14 +129,19 @@ const CALCULATORS = {
             const density = app.getMaterialDensity();
 
             if (width <= 0 || height <= 0 || length <= 0) {
-                return 0;
+                return {
+                    value: 0,
+                    error: 'Zadejte kladné hodnoty šířky, výšky i délky.'
+                };
             }
 
             const area = width * height;
             const volume = area * length;
             const volumeM3 = volume / 1_000_000_000;
 
-            return volumeM3 * density;
+            return {
+                value: volumeM3 * density
+            };
         }
     },
     'valec': {
@@ -144,14 +159,19 @@ const CALCULATORS = {
             const density = app.getMaterialDensity();
 
             if (diameter <= 0 || length <= 0) {
-                return 0;
+                return {
+                    value: 0,
+                    error: 'Zadejte kladné hodnoty průměru a délky.'
+                };
             }
 
             const area = Math.PI * (diameter / 2) ** 2;
             const volume = area * length;
             const volumeM3 = volume / 1_000_000_000;
 
-            return volumeM3 * density;
+            return {
+                value: volumeM3 * density
+            };
         }
     },
     'jakl': {
@@ -180,7 +200,10 @@ const CALCULATORS = {
                 thickness >= width / 2 ||
                 thickness >= height / 2
             ) {
-                return 0;
+                return {
+                    value: 0,
+                    error: 'Zadejte kladné hodnoty a tloušťka stěny musí být menší než polovina obou rozměrů profilu.'
+                };
             }
 
             const outerArea = width * height;
@@ -189,7 +212,9 @@ const CALCULATORS = {
             const volume = materialArea * length;
             const volumeM3 = volume / 1_000_000_000;
 
-            return volumeM3 * density;
+            return {
+                value: volumeM3 * density
+            };
         }
     },
     'profil-l': {
@@ -217,14 +242,19 @@ const CALCULATORS = {
                 length <= 0 ||
                 thickness >= Math.min(width, height)
             ) {
-                return 0;
+                return {
+                    value: 0,
+                    error: 'Zadejte kladné hodnoty a tloušťka stěny musí být menší než rozměry ramen profilu.'
+                };
             }
 
             const area = width * thickness + (height - thickness) * thickness;
             const volume = area * length;
             const volumeM3 = volume / 1_000_000_000;
 
-            return volumeM3 * density;
+            return {
+                value: volumeM3 * density
+            };
         }
     },
     'plochace': {
@@ -252,20 +282,41 @@ const CALCULATORS = {
             const height = app.readNumber('profile-height');
             const length = app.readNumber('length');
 
-            if (!profileType || height <= 0 || length <= 0) {
-                return 0;
+            if (!profileType) {
+                return {
+                    value: 0,
+                    error: 'Vyberte prosím typ profilu.'
+                };
+            }
+
+            if (height <= 0 || length <= 0) {
+                return {
+                    value: 0,
+                    error: 'Zadejte kladné hodnoty výšky i délky.'
+                };
             }
 
             const profiles = await app.loadProfileData();
+            if (!Array.isArray(profiles) || profiles.length === 0) {
+                return {
+                    value: 0,
+                    error: 'Databázi profilů se nepodařilo načíst.'
+                };
+            }
             const profile = profiles.find((item) => item.Typ === profileType && Number(item.Rozmer) === Number(height));
 
             if (!profile) {
                 console.warn(`Nenalezen profil: ${profileType} ${height}`);
-                return 0;
+                return {
+                    value: 0,
+                    error: 'Zadaná kombinace typu a výšky nebyla v databázi nalezena.'
+                };
             }
 
             const lengthM = length / 1000;
-            return profile.Hmotnost_m * lengthM;
+            return {
+                value: profile.Hmotnost_m * lengthM
+            };
         }
     },
     'kabely': {
@@ -282,10 +333,15 @@ const CALCULATORS = {
             const turns = app.readNumber('turns-count');
 
             if (spoolDiameter <= 0 || turns <= 0) {
-                return 0;
+                return {
+                    value: 0,
+                    error: 'Zadejte kladné hodnoty průměru špule i počtu závitů.'
+                };
             }
 
-            return (spoolDiameter * Math.PI * turns) / 1000;
+            return {
+                value: (spoolDiameter * Math.PI * turns) / 1000
+            };
         }
     },
     'folie': {
@@ -312,7 +368,10 @@ const CALCULATORS = {
                 thickness <= 0 ||
                 spoolDiameter >= rollDiameter
             ) {
-                return 0;
+                return {
+                    value: 0,
+                    error: 'Zadejte kladné hodnoty a průměr špule musí být menší než průměr role.'
+                };
             }
 
             const crossSectionArea = (Math.PI * (rollDiameter ** 2 - spoolDiameter ** 2)) / 4;
@@ -320,7 +379,9 @@ const CALCULATORS = {
             const stripLengthM = stripLengthMm / 1000;
             const stripWidthM = rollWidth / 1000;
 
-            return stripLengthM * stripWidthM;
+            return {
+                value: stripLengthM * stripWidthM
+            };
         }
     }
 };
@@ -506,6 +567,7 @@ class MaterialCalculatorApp {
                         <label>${config.resultLabel || 'Hmotnost:'}</label>
                         <span id="result-weight">${initialResult}</span>
                     </div>
+                    <div id="calculator-error" class="calculator-feedback" role="alert" hidden></div>
                 </div>
                 <div class="calculator-actions">
                     <button type="button" class="btn btn-primary calculate-btn">
@@ -1483,14 +1545,18 @@ class MaterialCalculatorApp {
             return;
         }
 
+        this.updateCalculationFeedback('');
+
         try {
             const rawValue = await Promise.resolve(config.compute(this));
-            const numericValue = Number.isFinite(rawValue) ? rawValue : 0;
-            const safeValue = Math.max(0, numericValue);
+            const { value, error } = this.normalizeComputeResult(rawValue);
+            const safeValue = Math.max(0, Number.isFinite(value) ? value : 0);
 
+            this.updateCalculationFeedback(error);
             resultElement.textContent = this.formatResult(safeValue, config);
         } catch (error) {
             console.error('Chyba při výpočtu:', error);
+            this.updateCalculationFeedback('Výpočet se nezdařil. Zkontrolujte prosím zadané hodnoty.');
             resultElement.textContent = this.formatResult(0, config);
         }
     }
@@ -1527,6 +1593,52 @@ class MaterialCalculatorApp {
         const resultElement = document.getElementById('result-weight');
         if (resultElement) {
             resultElement.textContent = this.formatResult(0, config);
+        }
+
+        this.updateCalculationFeedback('');
+    }
+
+    normalizeComputeResult(result) {
+        let numericValue = 0;
+        let errorMessage = '';
+
+        if (result && typeof result === 'object' && !Array.isArray(result)) {
+            if (typeof result.error === 'string') {
+                errorMessage = result.error.trim();
+            }
+
+            if ('value' in result) {
+                const candidate = Number(result.value);
+                if (Number.isFinite(candidate)) {
+                    numericValue = candidate;
+                }
+            }
+
+            return { value: numericValue, error: errorMessage };
+        }
+
+        const candidate = Number(result);
+        if (Number.isFinite(candidate)) {
+            numericValue = candidate;
+        }
+
+        return { value: numericValue, error: errorMessage };
+    }
+
+    updateCalculationFeedback(message) {
+        const feedbackElement = document.getElementById('calculator-error');
+        if (!feedbackElement) {
+            return;
+        }
+
+        const text = typeof message === 'string' ? message.trim() : '';
+
+        if (text) {
+            feedbackElement.textContent = text;
+            feedbackElement.hidden = false;
+        } else {
+            feedbackElement.textContent = '';
+            feedbackElement.hidden = true;
         }
     }
 
