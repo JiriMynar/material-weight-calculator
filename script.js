@@ -499,8 +499,8 @@ class MaterialCalculatorApp {
                     alt="TES logo"
                     class="app-logo"
                     decoding="async"
-                    data-logo-src="images/mainlogo.svg"
-                    data-logo-fallbacks="images/mainlogo.png, images/mainlogo.webp, images/mainlogo.jpg, images/mainlogo.jpeg"
+                    data-logo-src="images/mainlogo.png"
+                    data-logo-fallbacks="images/tes.webp"
                 >
             </figure>
         `;
