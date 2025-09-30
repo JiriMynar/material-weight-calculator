@@ -434,6 +434,7 @@ class MaterialCalculatorApp {
         this.profileDatabaseLastFocus = null;
         this.profileDatabaseHideTimeout = null;
         this.bodyOriginalOverflow = '';
+        this.isProfileDatabaseExporting = false;
 
         this.calculate = this.calculate.bind(this);
         this.resetCalculator = this.resetCalculator.bind(this);
@@ -593,17 +594,6 @@ class MaterialCalculatorApp {
                 </button>
             `
             : '';
-        const profileDatabaseExportTriggerHTML = type === 'profil-iu'
-            ? `
-                <button
-                    type="button"
-                    class="btn btn-primary profile-database-export-trigger"
-                >
-                    <span class="btn-icon" aria-hidden="true">📥</span>
-                    <span>Export do Excelu</span>
-                </button>
-            `
-            : '';
         const profileDatabaseOverlayHTML = type === 'profil-iu'
             ? this.renderProfileDatabaseOverlay()
             : '';
@@ -618,7 +608,6 @@ class MaterialCalculatorApp {
                     </div>
                     <div class="calculator-header-actions">
                         ${profileDatabaseButtonHTML}
-                        ${profileDatabaseExportTriggerHTML}
                         <button type="button" class="btn btn-danger reset-btn">Resetovat</button>
                     </div>
                 </div>
@@ -1533,7 +1522,6 @@ class MaterialCalculatorApp {
     setupProfileDatabaseEvents() {
         const overlay = this.container.querySelector('.profile-database-overlay');
         const infoButton = this.container.querySelector('.profile-database-btn');
-        const exportTrigger = this.container.querySelector('.profile-database-export-trigger');
 
         if (!overlay || !infoButton) {
             return;
@@ -1889,13 +1877,28 @@ class MaterialCalculatorApp {
 </Workbook>`;
     }
 
+    async exportProfileDatabaseToExcel(event) {
+        if (event && typeof event.preventDefault === 'function') {
+            event.preventDefault();
+        }
 
-        if (this.currentView !== 'profil-iu') {
+        if (this.isProfileDatabaseExporting || this.currentView !== 'profil-iu') {
             return;
         }
 
+        const exportButtons = [
+            this.container.querySelector('.profile-database-export')
+        ].filter(Boolean);
 
-        }
+        const setButtonsDisabled = (isDisabled) => {
+            exportButtons.forEach((button) => {
+                button.disabled = isDisabled;
+                button.classList.toggle('is-loading', isDisabled);
+            });
+        };
+
+        this.isProfileDatabaseExporting = true;
+        setButtonsDisabled(true);
 
         try {
             const profiles = await this.loadProfileData();
@@ -1921,8 +1924,8 @@ class MaterialCalculatorApp {
             console.error('Chyba při exportu databáze profilů:', error);
             alert('Export databáze profilů se nezdařil.');
         } finally {
-
-            }
+            this.isProfileDatabaseExporting = false;
+            setButtonsDisabled(false);
         }
     }
 
