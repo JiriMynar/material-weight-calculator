@@ -676,11 +676,13 @@ class MaterialCalculatorApp {
                             </button>
                         </div>
                     </div>
-                    <p id="profile-database-description" class="profile-database-description">
-                        Kompletní přehled typů, rozměrů a hmotností na metr z interní databáze profilů.
-                    </p>
-                    <div class="profile-database-body">
-                        <div class="profile-database-table" role="region" aria-live="polite" aria-busy="false"></div>
+                    <div class="profile-database-content">
+                        <p id="profile-database-description" class="profile-database-description">
+                            Kompletní přehled typů, rozměrů a hmotností na metr z interní databáze profilů.
+                        </p>
+                        <div class="profile-database-body">
+                            <div class="profile-database-table" role="region" aria-live="polite" aria-busy="false"></div>
+                        </div>
                     </div>
                 </div>
             </div>
@@ -1887,8 +1889,6 @@ class MaterialCalculatorApp {
         }
 
         const exportButtons = [
-
-        ].filter(Boolean);
 
         const setButtonsDisabled = (isDisabled) => {
             exportButtons.forEach((button) => {
