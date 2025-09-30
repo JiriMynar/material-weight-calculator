@@ -1888,7 +1888,10 @@ class MaterialCalculatorApp {
             return;
         }
 
-        const exportButtons = [
+        const exportButtons = Array.from(new Set([
+            ...(event && event.currentTarget ? [event.currentTarget] : []),
+            ...this.container.querySelectorAll('.profile-database-export')
+        ]));
 
         const setButtonsDisabled = (isDisabled) => {
             exportButtons.forEach((button) => {
