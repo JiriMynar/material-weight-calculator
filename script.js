@@ -1887,7 +1887,7 @@ class MaterialCalculatorApp {
         }
 
         const exportButtons = [
-            this.container.querySelector('.profile-database-export')
+
         ].filter(Boolean);
 
         const setButtonsDisabled = (isDisabled) => {
