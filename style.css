@@ -267,6 +267,8 @@ main {
 .calculator-header-actions {
     display: inline-flex;
     align-items: center;
+    justify-content: flex-end;
+    flex-wrap: wrap;
     gap: 0.75rem;
 }
 
@@ -569,6 +571,16 @@ main {
     gap: 1rem;
 }
 
+.profile-database-actions {
+    display: flex;
+    align-items: center;
+    gap: 0.75rem;
+}
+
+.profile-database-actions .btn {
+    white-space: nowrap;
+}
+
 .profile-database-header h3 {
     font-size: 1.45rem;
     font-weight: 700;
@@ -595,64 +607,154 @@ main {
     overflow: auto;
     background: rgba(255, 255, 255, 0.98);
     box-shadow: inset 0 1px 0 rgba(255, 255, 255, 0.45);
+    position: relative;
+}
+
+.profile-database-table::after {
+    content: '';
+    position: sticky;
+    bottom: 0;
+    left: 0;
+    right: 0;
+    height: 1.2rem;
+    pointer-events: none;
+    background: linear-gradient(180deg, rgba(255, 255, 255, 0) 0%, rgba(166, 206, 57, 0.1) 75%, rgba(166, 206, 57, 0.18) 100%);
 }
 
 .profile-database-table table {
     width: 100%;
     border-collapse: collapse;
-    min-width: 100%;
+    min-width: 640px;
+    table-layout: fixed;
+}
+
+.profile-database-table col.profile-database-col-index {
+    width: 14%;
+}
+
+.profile-database-table col.profile-database-col-type {
+    width: 36%;
+}
+
+.profile-database-table col.profile-database-col-dimension,
+.profile-database-table col.profile-database-col-weight {
+    width: 25%;
 }
 
 .profile-database-table thead th {
     position: sticky;
     top: 0;
-    background: linear-gradient(180deg, rgba(166, 206, 57, 0.18) 0%, rgba(166, 206, 57, 0.08) 100%);
+    background: linear-gradient(180deg, rgba(166, 206, 57, 0.22) 0%, rgba(166, 206, 57, 0.12) 100%);
     color: var(--color-text);
     font-size: 0.95rem;
     text-transform: uppercase;
     letter-spacing: 0.02em;
+    border-bottom: 2px solid rgba(166, 206, 57, 0.4);
+    box-shadow: 0 1px 0 rgba(255, 255, 255, 0.55);
+    z-index: 2;
 }
 
 
-.profile-database-table .profile-database-col-index,
+.profile-database-table .profile-database-header-index,
 .profile-database-table .profile-database-index {
-    width: 1%;
-    text-align: right;
+    text-align: left;
     font-variant-numeric: tabular-nums;
     color: var(--color-muted);
 }
 
-.profile-database-table .profile-database-col-index {
-    min-width: 3.5rem;
+.profile-database-table .profile-database-index .profile-database-cell--number {
+    text-align: left;
 }
 
 .profile-database-table th,
 .profile-database-table td {
-    padding: 0.75rem 1.1rem;
-
-.profile-database-table th,
-.profile-database-table td {
-    padding: 0.75rem 1.1rem;
+    padding: 0.75rem 1rem;
     text-align: left;
-
     font-size: 0.96rem;
     border-bottom: 1px solid rgba(166, 206, 57, 0.18);
+    vertical-align: middle;
+    background-clip: padding-box;
+}
+
+.profile-database-table td {
+    position: relative;
+}
+
+.profile-database-table .profile-database-number {
+    text-align: right;
+    font-variant-numeric: tabular-nums;
+    font-feature-settings: 'tnum' 1, 'lnum' 1;
+}
+
+.profile-database-table .profile-database-header-type,
+.profile-database-table .profile-database-type {
+    white-space: normal;
+    font-weight: 600;
+    letter-spacing: 0.01em;
+}
+
+.profile-database-table .profile-database-header-index,
+.profile-database-table .profile-database-header-dimension,
+.profile-database-table .profile-database-header-weight,
+.profile-database-table .profile-database-number {
     white-space: nowrap;
 }
 
+.profile-database-table .profile-database-header-dimension,
+.profile-database-table .profile-database-header-weight {
+    text-align: right;
+}
 
-.profile-database-table th:not(.profile-database-col-index),
-.profile-database-table td:not(.profile-database-index) {
-    text-align: left;
+.profile-database-table .profile-database-header-index,
+.profile-database-table .profile-database-index {
+    min-width: 3.5rem;
+}
+
+.profile-database-table .profile-database-header-dimension,
+.profile-database-table .profile-database-header-weight,
+.profile-database-table .profile-database-dimension,
+.profile-database-table .profile-database-weight {
+    min-width: 7.5rem;
 }
 
 
+.profile-database-table tbody tr {
+    transition: background-color 0.2s ease, transform 0.2s ease;
+}
+
 .profile-database-table tbody tr:nth-child(even) {
-    background: rgba(166, 206, 57, 0.06);
+    background: rgba(166, 206, 57, 0.05);
+}
+
+.profile-database-table tbody tr:nth-child(odd) {
+    background: rgba(255, 255, 255, 0.96);
 }
 
 .profile-database-table tbody tr:last-child td {
     border-bottom: none;
+}
+
+.profile-database-table tbody tr:hover {
+    background: rgba(166, 206, 57, 0.12);
+    transform: translateY(-1px);
+}
+
+.profile-database-table tbody tr:focus-within {
+    outline: 2px solid rgba(166, 206, 57, 0.5);
+    outline-offset: -2px;
+    background: rgba(166, 206, 57, 0.16);
+}
+
+.profile-database-cell {
+    display: block;
+    width: 100%;
+    line-height: 1.35;
+}
+
+.profile-database-cell--number {
+    text-align: right;
+    font-variant-numeric: tabular-nums;
+    font-feature-settings: 'tnum' 1, 'lnum' 1;
 }
 
 .profile-database-status {
@@ -683,7 +785,9 @@ main {
 
 .calculator-view--flatbar .flatbar-calculators {
     display: grid;
+    grid-template-columns: repeat(auto-fit, minmax(320px, 1fr));
     gap: 1.9rem;
+    align-items: stretch;
 }
 
 .flatbar-calculator {
@@ -695,6 +799,7 @@ main {
     display: flex;
     flex-direction: column;
     gap: 1.6rem;
+    height: 100%;
 }
 
 .flatbar-calculator__header {
@@ -722,6 +827,7 @@ main {
     display: grid;
     grid-template-columns: repeat(auto-fit, minmax(240px, 1fr));
     gap: 1.5rem;
+    align-items: flex-start;
 }
 
 .flatbar-field {
@@ -769,6 +875,7 @@ main {
     align-items: center;
     gap: 0.5rem;
     text-align: center;
+    margin-top: auto;
 }
 
 .flatbar-result-label {
@@ -947,7 +1054,14 @@ main {
         gap: 0.75rem;
     }
 
-    .profile-database-header .btn {
+    .profile-database-actions {
+        width: 100%;
+        flex-direction: column;
+        align-items: stretch;
+        gap: 0.65rem;
+    }
+
+    .profile-database-actions .btn {
         width: 100%;
     }
 

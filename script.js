@@ -393,6 +393,7 @@ class MaterialCalculatorApp {
         this.container = document.getElementById('app-container');
         this.currentView = 'home';
         this.profileData = null;
+        this.profileTypeOrder = [];
         this.flatbarConfigCache = new Map();
         this.profileDatabaseLastFocus = null;
         this.profileDatabaseHideTimeout = null;
@@ -402,6 +403,7 @@ class MaterialCalculatorApp {
         this.resetCalculator = this.resetCalculator.bind(this);
         this.takeScreenshot = this.takeScreenshot.bind(this);
         this.exportToEmail = this.exportToEmail.bind(this);
+        this.exportProfileDatabaseToExcel = this.exportProfileDatabaseToExcel.bind(this);
         this.handleProfileDatabaseKeydown = this.handleProfileDatabaseKeydown.bind(this);
 
         this.setupRouter();
@@ -543,6 +545,17 @@ class MaterialCalculatorApp {
                 </button>
             `
             : '';
+        const profileDatabaseExportTriggerHTML = type === 'profil-iu'
+            ? `
+                <button
+                    type="button"
+                    class="btn btn-primary profile-database-export-trigger"
+                >
+                    <span class="btn-icon" aria-hidden="true">📥</span>
+                    <span>Export do Excelu</span>
+                </button>
+            `
+            : '';
         const profileDatabaseOverlayHTML = type === 'profil-iu'
             ? this.renderProfileDatabaseOverlay()
             : '';
@@ -554,6 +567,7 @@ class MaterialCalculatorApp {
                     <h2>${config.title}</h2>
                     <div class="calculator-header-actions">
                         ${profileDatabaseButtonHTML}
+                        ${profileDatabaseExportTriggerHTML}
                         <button type="button" class="btn btn-danger reset-btn">Resetovat</button>
                     </div>
                 </div>
@@ -609,10 +623,16 @@ class MaterialCalculatorApp {
                 >
                     <div class="profile-database-header">
                         <h3 id="profile-database-title">Databáze profilů I a U</h3>
-                        <button type="button" class="btn btn-secondary profile-database-close">
-                            <span class="btn-icon" aria-hidden="true">✖️</span>
-                            <span>Zavřít</span>
-                        </button>
+                        <div class="profile-database-actions">
+                            <button type="button" class="btn btn-primary profile-database-export">
+                                <span class="btn-icon" aria-hidden="true">📥</span>
+                                <span>Export do Excelu</span>
+                            </button>
+                            <button type="button" class="btn btn-secondary profile-database-close">
+                                <span class="btn-icon" aria-hidden="true">✖️</span>
+                                <span>Zavřít</span>
+                            </button>
+                        </div>
                     </div>
                     <p id="profile-database-description" class="profile-database-description">
                         Kompletní přehled typů, rozměrů a hmotností na metr z interní databáze profilů.
@@ -1271,16 +1291,26 @@ class MaterialCalculatorApp {
     setupProfileDatabaseEvents() {
         const overlay = this.container.querySelector('.profile-database-overlay');
         const infoButton = this.container.querySelector('.profile-database-btn');
+        const exportTrigger = this.container.querySelector('.profile-database-export-trigger');
 
         if (!overlay || !infoButton) {
             return;
         }
 
         const closeButton = overlay.querySelector('.profile-database-close');
+        const exportButton = overlay.querySelector('.profile-database-export');
 
         infoButton.addEventListener('click', () => {
             this.openProfileDatabase();
         });
+
+        if (exportButton) {
+            exportButton.addEventListener('click', this.exportProfileDatabaseToExcel);
+        }
+
+        if (exportTrigger) {
+            exportTrigger.addEventListener('click', this.exportProfileDatabaseToExcel);
+        }
 
         if (closeButton) {
             closeButton.addEventListener('click', () => {
@@ -1418,6 +1448,14 @@ class MaterialCalculatorApp {
                 maximumFractionDigits: 0
             });
 
+            const buildCell = (label, className, content, isNumeric = false) => {
+                const numericClass = isNumeric ? ' profile-database-cell--number' : '';
+                return `
+                    <td data-label="${label}" class="${className}">
+                        <span class="profile-database-cell${numericClass}">${content}</span>
+                    </td>
+                `;
+            };
 
             const rowsHTML = sortedProfiles.map((profile, index) => {
                 const type = profile && typeof profile.Typ === 'string' ? profile.Typ.trim() : '';
@@ -1425,19 +1463,22 @@ class MaterialCalculatorApp {
                 const weightValue = Number(profile && profile.Hmotnost_m);
                 const rowNumber = index + 1;
 
+                const typeText = type !== ''
+                    ? this.escapeHTML(type)
+                    : this.escapeHTML('–');
                 const dimensionText = Number.isFinite(dimensionValue)
-                    ? dimensionFormatter.format(dimensionValue)
-                    : '–';
+                    ? this.escapeHTML(dimensionFormatter.format(dimensionValue))
+                    : this.escapeHTML('–');
                 const weightText = Number.isFinite(weightValue)
-                    ? this.formatWithPrecision(weightValue, 3)
-                    : '–';
+                    ? this.escapeHTML(this.formatWithPrecision(weightValue, 3))
+                    : this.escapeHTML('–');
 
                 return `
                     <tr>
-                        <td data-label="Pořadí" class="profile-database-index">${rowNumber}</td>
-                        <td data-label="Typ">${this.escapeHTML(type)}</td>
-                        <td data-label="Rozměr [mm]">${this.escapeHTML(dimensionText)}</td>
-                        <td data-label="Hmotnost [kg/m]">${this.escapeHTML(weightText)}</td>
+                        ${buildCell('Pořadí', 'profile-database-index profile-database-number', this.escapeHTML(String(rowNumber)), true)}
+                        ${buildCell('Typ', 'profile-database-type', typeText)}
+                        ${buildCell('Rozměr [mm]', 'profile-database-dimension profile-database-number', dimensionText, true)}
+                        ${buildCell('Hmotnost [kg/m]', 'profile-database-weight profile-database-number', weightText, true)}
                     </tr>
                 `;
             }).join('');
@@ -1445,15 +1486,18 @@ class MaterialCalculatorApp {
             tableContainer.innerHTML = `
                 <table>
                     <caption class="visually-hidden">Kompletní databáze profilů I a U</caption>
+                    <colgroup>
+                        <col class="profile-database-col-index" />
+                        <col class="profile-database-col-type" />
+                        <col class="profile-database-col-dimension" />
+                        <col class="profile-database-col-weight" />
+                    </colgroup>
                     <thead>
                         <tr>
-
-                            <th scope="col" class="profile-database-col-index">Pořadí</th>
-
-
-                            <th scope="col">Typ</th>
-                            <th scope="col">Rozměr [mm]</th>
-                            <th scope="col">Hmotnost [kg/m]</th>
+                            <th scope="col" class="profile-database-header-index profile-database-number">Pořadí</th>
+                            <th scope="col" class="profile-database-header-type">Typ</th>
+                            <th scope="col" class="profile-database-header-dimension profile-database-number">Rozměr [mm]</th>
+                            <th scope="col" class="profile-database-header-weight profile-database-number">Hmotnost [kg/m]</th>
                         </tr>
                     </thead>
                     <tbody>
@@ -1472,9 +1516,30 @@ class MaterialCalculatorApp {
     }
 
     sortProfilesForTable(profiles) {
+        const typeOrder = this.getProfileTypeOrder(profiles);
+        const typeRank = new Map();
+
+        typeOrder.forEach((type, index) => {
+            typeRank.set(type, index);
+        });
+
+        const getTypeRank = (type) => {
+            const trimmed = typeof type === 'string' ? type.trim() : '';
+            return typeRank.has(trimmed) ? typeRank.get(trimmed) : Number.MAX_SAFE_INTEGER;
+        };
+
         return profiles.slice().sort((a, b) => {
-            const typeA = a && typeof a.Typ === 'string' ? a.Typ : '';
-            const typeB = b && typeof b.Typ === 'string' ? b.Typ : '';
+            const rawTypeA = a && typeof a.Typ === 'string' ? a.Typ : '';
+            const rawTypeB = b && typeof b.Typ === 'string' ? b.Typ : '';
+            const typeA = typeof rawTypeA === 'string' ? rawTypeA.trim() : '';
+            const typeB = typeof rawTypeB === 'string' ? rawTypeB.trim() : '';
+            const rankA = getTypeRank(typeA);
+            const rankB = getTypeRank(typeB);
+
+            if (rankA !== rankB) {
+                return rankA - rankB;
+            }
+
             const typeComparison = typeA.localeCompare(typeB, 'cs');
 
             if (typeComparison !== 0) {
@@ -1498,6 +1563,140 @@ class MaterialCalculatorApp {
 
             return 0;
         });
+    }
+
+    buildProfileDatabaseWorkbook(profiles) {
+        const escapeXML = (value) => this.escapeHTML(String(value));
+        const createCell = (value, type, styleId = '') => {
+            const styleAttribute = styleId ? ` ss:StyleID="${styleId}"` : '';
+            return `<Cell${styleAttribute}><Data ss:Type="${type}">${escapeXML(value)}</Data></Cell>`;
+        };
+        const createRow = (cells) => `<Row>${cells.join('')}</Row>`;
+
+        const headerRow = createRow([
+            createCell('Pořadí', 'String', 'sHeader'),
+            createCell('Typ', 'String', 'sHeader'),
+            createCell('Rozměr [mm]', 'String', 'sHeader'),
+            createCell('Hmotnost [kg/m]', 'String', 'sHeader')
+        ]);
+
+        const dataRows = profiles.map((profile, index) => {
+            const rowNumber = index + 1;
+            const type = profile && typeof profile.Typ === 'string' ? profile.Typ.trim() : '';
+            const dimensionValue = Number(profile && profile.Rozmer);
+            const weightValue = Number(profile && profile.Hmotnost_m);
+
+            const cells = [
+                createCell(rowNumber, 'Number', 'sInteger'),
+                createCell(type || '', 'String'),
+                Number.isFinite(dimensionValue)
+                    ? createCell(dimensionValue, 'Number', 'sInteger')
+                    : createCell('', 'String'),
+                Number.isFinite(weightValue)
+                    ? createCell(Number(weightValue.toFixed(3)), 'Number', 'sDecimal3')
+                    : createCell('', 'String')
+            ];
+
+            return createRow(cells);
+        }).join('');
+
+        const timestamp = new Date().toISOString();
+
+        return `<?xml version="1.0" encoding="UTF-8"?>
+<?mso-application progid="Excel.Sheet"?>
+<Workbook xmlns="urn:schemas-microsoft-com:office:spreadsheet"
+    xmlns:o="urn:schemas-microsoft-com:office:office"
+    xmlns:x="urn:schemas-microsoft-com:office:excel"
+    xmlns:ss="urn:schemas-microsoft-com:office:spreadsheet"
+    xmlns:html="http://www.w3.org/TR/REC-html40">
+    <DocumentProperties xmlns="urn:schemas-microsoft-com:office:office">
+        <Created>${timestamp}</Created>
+    </DocumentProperties>
+    <Styles>
+        <Style ss:ID="Default" ss:Name="Normal">
+            <Alignment ss:Vertical="Bottom"/>
+            <Borders/>
+            <Font ss:FontName="Calibri" x:Family="Swiss" ss:Size="11" ss:Color="#000000"/>
+            <Interior/>
+            <NumberFormat/>
+            <Protection/>
+        </Style>
+        <Style ss:ID="sHeader">
+            <Font ss:Bold="1"/>
+            <Alignment ss:Horizontal="Center" ss:Vertical="Center"/>
+            <Interior ss:Color="#E8F4D8" ss:Pattern="Solid"/>
+        </Style>
+        <Style ss:ID="sInteger">
+            <NumberFormat ss:Format="0"/>
+        </Style>
+        <Style ss:ID="sDecimal3">
+            <NumberFormat ss:Format="0.000"/>
+        </Style>
+    </Styles>
+    <Worksheet ss:Name="Profily">
+        <Table>
+            <Column ss:AutoFitWidth="1" ss:Width="60"/>
+            <Column ss:AutoFitWidth="1" ss:Width="180"/>
+            <Column ss:AutoFitWidth="1" ss:Width="120"/>
+            <Column ss:AutoFitWidth="1" ss:Width="140"/>
+            ${headerRow}
+            ${dataRows}
+        </Table>
+        <WorksheetOptions xmlns="urn:schemas-microsoft-com:office:excel">
+            <Selected/>
+            <ProtectObjects>False</ProtectObjects>
+            <ProtectScenarios>False</ProtectScenarios>
+        </WorksheetOptions>
+    </Worksheet>
+</Workbook>`;
+    }
+
+    async exportProfileDatabaseToExcel(event) {
+        if (this.currentView !== 'profil-iu') {
+            return;
+        }
+
+        const overlay = this.container.querySelector('.profile-database-overlay');
+        const overlayExportButton = overlay ? overlay.querySelector('.profile-database-export') : null;
+        const triggerButton = event && event.currentTarget instanceof HTMLButtonElement
+            ? event.currentTarget
+            : null;
+        const buttonToDisable = triggerButton || overlayExportButton;
+
+        if (buttonToDisable) {
+            buttonToDisable.disabled = true;
+            buttonToDisable.setAttribute('aria-busy', 'true');
+        }
+
+        try {
+            const profiles = await this.loadProfileData();
+
+            if (!Array.isArray(profiles) || profiles.length === 0) {
+                alert('Databázi profilů se nepodařilo načíst.');
+                return;
+            }
+
+            const sortedProfiles = this.sortProfilesForTable(profiles);
+            const workbookContent = this.buildProfileDatabaseWorkbook(sortedProfiles);
+            const blob = new Blob([workbookContent], { type: 'application/vnd.ms-excel;charset=utf-8;' });
+            const url = URL.createObjectURL(blob);
+            const link = document.createElement('a');
+            const timestamp = new Date().toISOString().slice(0, 19).replace(/[T:]/g, '-');
+            link.href = url;
+            link.download = `databaze-profilu-${timestamp}.xls`;
+            document.body.appendChild(link);
+            link.click();
+            document.body.removeChild(link);
+            URL.revokeObjectURL(url);
+        } catch (error) {
+            console.error('Chyba při exportu databáze profilů:', error);
+            alert('Export databáze profilů se nezdařil.');
+        } finally {
+            if (buttonToDisable) {
+                buttonToDisable.disabled = false;
+                buttonToDisable.removeAttribute('aria-busy');
+            }
+        }
     }
 
     handleProfileDatabaseKeydown(event) {
@@ -1703,6 +1902,7 @@ class MaterialCalculatorApp {
             }
 
             this.profileData = await response.json();
+            this.profileTypeOrder = this.buildProfileTypeOrder(this.profileData);
             return this.profileData;
         } catch (error) {
             console.error('Chyba při načítání dat profilů:', error);
@@ -1716,17 +1916,7 @@ class MaterialCalculatorApp {
             return [];
         }
 
-        const typeSet = new Set();
-        profiles.forEach((profile) => {
-            if (profile && typeof profile.Typ === 'string') {
-                const trimmed = profile.Typ.trim();
-                if (trimmed !== '') {
-                    typeSet.add(trimmed);
-                }
-            }
-        });
-
-        return Array.from(typeSet).sort((a, b) => a.localeCompare(b, 'cs'));
+        return this.getProfileTypeOrder(profiles);
     }
 
     async populateProfileTypeOptions() {
@@ -1756,6 +1946,36 @@ class MaterialCalculatorApp {
             select.innerHTML = `${placeholderOption}<option value="" disabled>Nepodařilo se načíst</option>`;
             throw error;
         }
+    }
+
+    buildProfileTypeOrder(profiles) {
+        if (!Array.isArray(profiles) || profiles.length === 0) {
+            return [];
+        }
+
+        const seen = new Set();
+        const order = [];
+
+        profiles.forEach((profile) => {
+            if (profile && typeof profile.Typ === 'string') {
+                const type = profile.Typ.trim();
+                if (type !== '' && !seen.has(type)) {
+                    seen.add(type);
+                    order.push(type);
+                }
+            }
+        });
+
+        return order;
+    }
+
+    getProfileTypeOrder(profiles) {
+        if (Array.isArray(this.profileTypeOrder) && this.profileTypeOrder.length > 0) {
+            return this.profileTypeOrder.slice();
+        }
+
+        const resolvedProfiles = Array.isArray(profiles) ? profiles : this.profileData;
+        return this.buildProfileTypeOrder(resolvedProfiles);
     }
 
     async takeScreenshot() {
