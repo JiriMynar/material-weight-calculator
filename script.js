@@ -434,6 +434,7 @@ class MaterialCalculatorApp {
         this.profileDatabaseLastFocus = null;
         this.profileDatabaseHideTimeout = null;
         this.bodyOriginalOverflow = '';
+        this.isProfileDatabaseExporting = false;
 
         this.calculate = this.calculate.bind(this);
         this.resetCalculator = this.resetCalculator.bind(this);
@@ -1889,13 +1890,29 @@ class MaterialCalculatorApp {
 </Workbook>`;
     }
 
+    async exportProfileDatabaseToExcel(event) {
+        if (event && typeof event.preventDefault === 'function') {
+            event.preventDefault();
+        }
 
-        if (this.currentView !== 'profil-iu') {
+        if (this.isProfileDatabaseExporting || this.currentView !== 'profil-iu') {
             return;
         }
 
+        const exportButtons = [
+            this.container.querySelector('.profile-database-export'),
+            this.container.querySelector('.profile-database-export-trigger')
+        ].filter(Boolean);
 
-        }
+        const setButtonsDisabled = (isDisabled) => {
+            exportButtons.forEach((button) => {
+                button.disabled = isDisabled;
+                button.classList.toggle('is-loading', isDisabled);
+            });
+        };
+
+        this.isProfileDatabaseExporting = true;
+        setButtonsDisabled(true);
 
         try {
             const profiles = await this.loadProfileData();
@@ -1921,8 +1938,8 @@ class MaterialCalculatorApp {
             console.error('Chyba při exportu databáze profilů:', error);
             alert('Export databáze profilů se nezdařil.');
         } finally {
-
-            }
+            this.isProfileDatabaseExporting = false;
+            setButtonsDisabled(false);
         }
     }
 
