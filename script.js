@@ -36,7 +36,7 @@ const CALCULATOR_TILES = [
     { id: 'mezikruzi', title: 'Mezikruží', image: 'images/mezikruzi.png' },
     { id: 'trubka', title: 'Trubka', image: 'images/trubka.png' },
     { id: 'hranol', title: 'Hranol', image: 'images/hranol.png' },
-    { id: 'sestihran', title: 'Šestihran', image: 'images/sestihran.svg' },
+    { id: 'sestihran', title: 'Šestihran', image: 'images/sestihran.png' },
     { id: 'valec', title: 'Válec', image: 'images/valec.png' },
     { id: 'jakl', title: 'Jakl', image: 'images/jakl.png' },
     { id: 'profil-l', title: 'Profil L', image: 'images/profil-l.png' },
