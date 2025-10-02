@@ -36,6 +36,7 @@ const CALCULATOR_TILES = [
     { id: 'mezikruzi', title: 'Mezikruží', image: 'images/mezikruzi.png' },
     { id: 'trubka', title: 'Trubka', image: 'images/trubka.png' },
     { id: 'hranol', title: 'Hranol', image: 'images/hranol.png' },
+    { id: 'sestihran', title: 'Šestihran', image: 'images/sestihran.svg' },
     { id: 'valec', title: 'Válec', image: 'images/valec.png' },
     { id: 'jakl', title: 'Jakl', image: 'images/jakl.png' },
     { id: 'profil-l', title: 'Profil L', image: 'images/profil-l.png' },
@@ -148,6 +149,40 @@ const CALCULATORS = {
             }
 
             const area = width * height;
+            const volume = area * length;
+            const volumeM3 = volume / 1_000_000_000;
+
+            return {
+                value: volumeM3 * density
+            };
+        }
+    },
+    'sestihran': {
+        title: 'Šestihran',
+        resultLabel: 'Hmotnost:',
+        resultUnit: 'kg',
+        showMaterialSelector: true,
+        formula: `
+            <p><strong>Hmotnost</strong> = ρ × (\u221a3 ÷ 2 × S<sup>2</sup>) × L ÷ 10<sup>9</sup></p>
+            <p>ρ je hustota materiálu [kg/m<sup>3</sup>], S je šířka šestihranu [mm] a L je délka [mm].</p>
+        `,
+        inputs: [
+            { id: 'hex-width', label: 'Šířka S [mm]', type: 'number' },
+            { id: 'length', label: 'Délka L [mm]', type: 'number' }
+        ],
+        compute: (app) => {
+            const width = app.readNumber('hex-width');
+            const length = app.readNumber('length');
+            const density = app.getMaterialDensity();
+
+            if (width <= 0 || length <= 0) {
+                return {
+                    value: 0,
+                    error: 'Zadejte kladné hodnoty šířky i délky.'
+                };
+            }
+
+            const area = (Math.sqrt(3) / 2) * (width ** 2);
             const volume = area * length;
             const volumeM3 = volume / 1_000_000_000;
 
